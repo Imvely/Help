@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from pathlib import Path
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -24,6 +25,10 @@ def make_engine(url: str | None = None):
     kwargs: dict = {}
     if url.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}
+        # 파일 DB 면 상위 폴더(data/)를 미리 만든다. 없으면 "unable to open database file".
+        path = url.split("///", 1)[1] if "///" in url else ""
+        if path and path != ":memory:" and not path.startswith("file:"):
+            Path(path).expanduser().parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(url, **kwargs)
     if url.startswith("sqlite"):
         # SQLite 는 외래키 제약을 기본으로 끄기 때문에 켜 준다.

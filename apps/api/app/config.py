@@ -10,7 +10,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="EODISAN_", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_prefix="EODISAN_",
+                                      extra="ignore")
 
     # DB: 기본은 로컬 SQLite(개발/테스트). 운영은 Postgres+pgvector.
     database_url: str = "sqlite:///./data/eodisan.db"
