@@ -14,6 +14,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
+RUN mkdir -p /app/data/uploads && chown -R api:api /app/data
 USER api
 EXPOSE 8000
 HEALTHCHECK --interval=30s CMD python -c "import urllib.request;urllib.request.urlopen('http://localhost:8000/healthz')"

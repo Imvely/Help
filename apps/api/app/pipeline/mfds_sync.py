@@ -25,8 +25,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.db import models as m
 from app.pipeline.mfds_client import MfdsClient
-from app.services.allergen_matcher import match_allergens
-from app.services.ingredient_parser import ParsedIngredient, flatten_names, parse_ingredients
+from app.services.product_writer import IngredientIndex, LabelFacts, upsert_product
 
 log = logging.getLogger(__name__)
 
@@ -85,96 +84,30 @@ def dump(service: str, max_rows: int | None = None, start: int = 1,
 # ───────────── 정규화 ─────────────
 
 
-def _ingredient_index(db: Session) -> dict[str, m.Ingredient]:
-    """이름/동의어 → Ingredient. 공백 제거·소문자 기준."""
-    idx: dict[str, m.Ingredient] = {}
-    for ing in db.execute(select(m.Ingredient)).scalars():
-        for key in [ing.name_ko, *(ing.synonyms or [])]:
-            idx[key.replace(" ", "").lower()] = ing
-    return idx
+def _ingredient_index(db: Session) -> IngredientIndex:
+    return IngredientIndex(db)
 
 
 def _allergen_synonyms(db: Session) -> dict[str, list[str]]:
     return {a.code: [a.name_ko, *(a.synonyms or [])] for a in db.execute(select(m.Allergen)).scalars()}
 
 
-def _match_ingredient(idx: dict[str, m.Ingredient], name: str) -> m.Ingredient | None:
-    k = name.replace(" ", "").lower()
-    if k in idx:
-        return idx[k]
-    # 'L-글루탐산나트륨(향미증진제)' 같이 괄호 앞 이름, 또는 사전 키가 포함된 경우
-    for key, ing in idx.items():
-        if len(key) >= 3 and key in k:
-            return ing
-    return None
-
-
-def upsert_product_from_c002(db: Session, row: dict, idx: dict[str, m.Ingredient],
-                             allergen_syn: dict[str, list[str]]) -> m.Product:
-    report_no = str(row.get("PRDLST_REPORT_NO") or "").strip()
-    product = None
-    if report_no:
-        product = db.execute(
-            select(m.Product).where(m.Product.mfds_report_no == report_no)
-        ).scalar_one_or_none()
-    if not product:
-        product = m.Product(name=row.get("PRDLST_NM", "").strip() or "(이름 없음)",
-                            mfds_report_no=report_no or None)
-        db.add(product)
-    product.name = row.get("PRDLST_NM", product.name).strip()
-    product.manufacturer = (row.get("BSSH_NM") or "").strip() or product.manufacturer
-    product.brand = product.brand or product.manufacturer
-    product.subcategory = (row.get("PRDLST_DCNM") or "").strip() or product.subcategory
-    product.category = "food"
-    db.flush()
-
-    # 원재료 재구성 (기존 C002 유래 항목은 교체)
-    for pi in list(product.ingredients):
-        if pi.source == "mfds_c002":
-            product.ingredients.remove(pi)
-            db.delete(pi)
-    db.flush()
-    parsed = parse_ingredients(row.get("RAWMTRL_NM"))
-    for rank, item in enumerate(parsed, start=1):
-        _add_product_ingredient(db, product, item, rank, idx)
-
-    # 알레르겐 텍스트 매칭(혼입 가능은 C002 에 없음)
-    names = flatten_names(parsed)
-    hits = {h.code for h in match_allergens(names, allergen_syn)}
-    # 포함 알레르겐은 응답 시 성분·동의어로 다시 계산하므로 여기선 저장 생략(출처만 기록)
-    _ = hits
-
-    # 원산지: C002 에는 완제품 원산지가 없다 → 제조원 주소가 없어 unknown. 국내 보고건이므로 제조국 KR 추정.
-    if not product.origin:
-        product.origin = m.ProductOrigin(manufacturing_country="KR",
-                                         manufacturer_name=product.manufacturer,
-                                         manufacturer_country="KR", confidence="inferred",
-                                         source="mfds_c002")
-    _touch_source(db, product, "mfds_c002", row.get("CHNG_DT") or row.get("PRMS_DT"), report_no)
+def upsert_product_from_c002(db: Session, row: dict, idx: IngredientIndex,
+                             allergen_syn: dict[str, list[str]] | None = None) -> m.Product:
+    """C002 한 행 → products. 원재료 원산지는 라벨 괄호에서, 제조국은 국내 보고건이므로 KR 로 추정."""
+    report_no = str(row.get("PRDLST_REPORT_NO") or "").strip() or None
+    facts = LabelFacts(
+        name=(row.get("PRDLST_NM") or "").strip() or None,
+        manufacturer=(row.get("BSSH_NM") or "").strip() or None,
+        subcategory=(row.get("PRDLST_DCNM") or "").strip() or None,
+        mfds_report_no=report_no,
+        ingredients_raw=row.get("RAWMTRL_NM"),
+        manufacturing_country="KR", manufacturer_country="KR", origin_confidence="inferred",
+    )
+    product, _ = upsert_product(db, facts, source="mfds_c002",
+                                source_date=_parse_date(row.get("CHNG_DT") or row.get("PRMS_DT")),
+                                source_ref=report_no, idx=idx)
     return product
-
-
-def _add_product_ingredient(db: Session, product: m.Product, item: ParsedIngredient, rank: int,
-                            idx: dict[str, m.Ingredient]) -> None:
-    ing = _match_ingredient(idx, item.name)
-    # relationship 컬렉션에 append 해야 같은 세션 안에서 바로 응답 조립에 반영된다.
-    pi = m.ProductIngredient(ingredient_id=ing.id if ing else None, rank=rank, raw_text=item.raw,
-                             function_hint=item.function_hint, source="mfds_c002")
-    product.ingredients.append(pi)
-    if item.origin:
-        pi.origins.append(m.IngredientOrigin(country=item.origin, raw_text=item.origin_raw,
-                                             source="label", confirmations=1))
-    db.flush()
-
-
-def _touch_source(db: Session, product: m.Product, type_: str, dt: str | None, ref: str | None):
-    d = _parse_date(dt)
-    for s in product.sources:
-        if s.type == type_:
-            s.date = d or s.date
-            s.ref = ref or s.ref
-            return
-    product.sources.append(m.ProductSource(type=type_, date=d, ref=ref))
 
 
 def _parse_date(v: str | None) -> date | None:

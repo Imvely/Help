@@ -10,7 +10,16 @@ from sqlalchemy.orm import Session
 
 from app.db import models as m
 from app.db.base import get_db
-from app.schemas import ProductResponse, SearchHit, SearchResponse
+from app.schemas import (
+    AlternativeOut,
+    AlternativesResponse,
+    GradeSummary,
+    ProductBrief,
+    ProductResponse,
+    SearchHit,
+    SearchResponse,
+)
+from app.services.alternatives import find_alternatives
 from app.services.product_service import build_response, load_product, product_by_barcode
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -58,6 +67,26 @@ def search(q: str = Query(..., min_length=1, max_length=100), limit: int = Query
         hits=[SearchHit(id=p.id, name=p.name, brand=p.brand, category=p.category,
                         image_url=p.image_url) for p in rows],
     )
+
+
+@router.get("/{product_id}/alternatives", response_model=AlternativesResponse)
+def alternatives(product_id: str, limit: int = Query(3, le=10), response: Response = None,
+                 db: Session = Depends(get_db)):
+    """같은 분류에서 '제조국 한국 + 성분 등급이 더 나은' 제품 (docs/02 P1-2)."""
+    product = db.get(m.Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="제품을 찾을 수 없습니다")
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    out = []
+    for alt, summary, country, reason in find_alternatives(db, product, limit):
+        out.append(AlternativeOut(
+            product=ProductBrief(id=alt.id, name=alt.name, brand=alt.brand, manufacturer=alt.manufacturer,
+                                 category=alt.category, subcategory=alt.subcategory, image_url=alt.image_url),
+            grade_summary=GradeSummary(**{k: summary.get(k, 0) for k in ("0", "1", "2", "3")},
+                                       unknown=summary.get("unknown", 0)),
+            manufacturing_country=country, reason=reason))
+    return AlternativesResponse(alternatives=out)
 
 
 @router.get("/{product_id}", response_model=ProductResponse)

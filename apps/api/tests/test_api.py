@@ -104,11 +104,14 @@ def test_recognize_with_embedding_brute_force(client, db, kimchi):
 
 
 def test_ocr_debug_text_path(client):
-    r = client.post("/v1/ocr/label", params={"text": "원재료명: 배추(국산), 고춧가루(중국산)\n내용량: 1kg"},
-                    files={"image": ("l.jpg", b"xx", "image/jpeg")})
+    r = client.post("/v1/ocr/label", data={"text": "원재료명: 배추(국산), 고춧가루(중국산), 새우젓\n내용량: 1kg"},
+                    files={"image": ("l.jpg", b"\xff\xd8\xff", "image/jpeg")})
     assert r.status_code == 202
-    job = r.json()
-    assert job["status"] == "done"
-    assert job["result"]["ingredients"][1] == {"name": "고춧가루", "origin": "CN", "function": None,
-                                               "sub_ingredients": []}
-    assert client.get(f"/v1/ocr/jobs/{job['job_id']}").json()["status"] == "done"
+    job_id = r.json()["job_id"]
+    job = client.get(f"/v1/ocr/jobs/{job_id}").json()  # 인라인 처리 후 done
+    assert job["status"] == "done", job
+    res = job["result"]
+    assert res["extraction_method"] == "regex"  # 테스트에선 Claude 비활성
+    assert res["ingredients"][1] == {"name": "고춧가루", "origin": "CN", "function": None,
+                                     "sub_ingredients": []}
+    assert "shellfish.crustacean.shrimp" in res["allergens_detected"]

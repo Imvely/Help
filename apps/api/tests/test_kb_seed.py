@@ -41,3 +41,18 @@ def test_known_grades(db):
     assert grade("부분경화유")[0] == 3
     assert grade("아세설팜칼륨")[0] == 0
     assert "pet" in grade("자일리톨")[1]
+
+
+def test_sample_products_load_and_render(client, db):
+    from app.kb.sample_loader import load_sample_products
+
+    assert load_sample_products(db) == 8
+    body = client.get("/v1/products/by-barcode/8800000009007").json()  # 컵라면: 중첩 복합원재료
+    names = [i["name"] for i in body["ingredients"]]
+    assert names == ["면", "스프"]
+    texts = [b["text"] for b in body["origin"]["badges"]]
+    assert texts[0] == "제조국: 🇰🇷 한국"
+    assert body["nutrition"]["sodium_mg"] == 1790
+    energy = client.get("/v1/products/by-barcode/8800000009003").json()
+    assert energy["origin"]["oem"] is True and energy["nutrition"]["high_caffeine"] is True
+    assert "child" in next(i for i in energy["ingredients"] if i["name"] == "황색4호")["applies_to_groups"]

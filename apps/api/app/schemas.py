@@ -183,6 +183,58 @@ class OcrJobOut(BaseModel):
     job_id: str
     status: Literal["queued", "running", "done", "failed"]
     result: dict | None = None
+    error: str | None = None
+
+
+class ExtractedIngredientIn(BaseModel):
+    name: str = Field(..., max_length=200)
+    origin: str | None = None  # KR|CN|...|외국산|unknown|None
+    function: str | None = None
+    sub_ingredients: list[str] = []
+
+
+class LabelExtractionIn(BaseModel):
+    """앱이 확인·수정해 보내는 라벨 정보 (ocr_worker.build_result 와 같은 모양)."""
+
+    ingredients_raw: str | None = None
+    ingredients: list[ExtractedIngredientIn] = []
+    manufacturing_country: str | None = None
+    manufacturer: str | None = None
+    brand_owner: str | None = None
+    caffeine_mg: float | None = None
+    high_caffeine: bool = False
+    allergen_statement: str | None = None
+    may_contain_statement: str | None = None
+    allergens_detected: list[str] = []
+    may_contain_detected: list[str] = []
+
+
+class LabelContributionIn(BaseModel):
+    job_id: str | None = None
+    ean13: str | None = None
+    product_id: str | None = None
+    product_name: str | None = Field(None, max_length=300)
+    brand: str | None = Field(None, max_length=200)
+    category: Literal["food", "cosmetic"] = "food"
+    extraction: LabelExtractionIn
+
+
+class LabelContributionOut(BaseModel):
+    product_id: str
+    created: bool
+    source: str  # ocr_user | ocr_verified
+    confirmations: int
+
+
+class AlternativeOut(BaseModel):
+    product: ProductBrief
+    grade_summary: GradeSummary
+    manufacturing_country: str | None = None
+    reason: str
+
+
+class AlternativesResponse(BaseModel):
+    alternatives: list[AlternativeOut]
 
 
 class Problem(BaseModel):

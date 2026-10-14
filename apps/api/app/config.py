@@ -25,6 +25,25 @@ class Settings(BaseSettings):
     embedding_model_version: str = "dinov3-vits16-v0"
     embedding_dim: int = 512
 
+    # 업로드 저장소: 로컬 디렉터리(개발) → R2/MinIO(운영, M2 후반)
+    upload_dir: str = "./data/uploads"
+    # OCR: 요청 안에서 바로 처리(dev) / 워커 큐(prod). PaddleOCR 미설치면 Claude 비전만 사용.
+    ocr_inline: bool = True
+    ocr_use_paddle: bool = False
+    # Claude 구조화 추출 (anthropic SDK 가 ANTHROPIC_API_KEY 를 읽는다). 비우면 정규식만.
+    label_extraction_model: str = "claude-opus-5-5"
+    label_extraction_enabled: bool = True
+    label_verify_threshold: int = 3  # 같은 라벨 제보가 n명 이상 일치하면 verified
+
+    # 인증: Supabase JWT (HS256). 비우면 /me/* 는 503
+    supabase_jwt_secret: str | None = None
+    # 프로필 암호화 키 (Fernet, base64 32바이트). 비우면 프로필 동기화 503
+    profile_encryption_key: str | None = None
+
+    # 푸시: Expo Push API
+    expo_push_url: str = "https://exp.host/--/api/v2/push/send"
+    expo_access_token: str | None = None
+
     cors_origins: list[str] = ["*"]
     debug: bool = False
 

@@ -312,7 +312,10 @@ class Scan(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True)  # 비회원 null
-    product_id: Mapped[str | None] = mapped_column(ForeignKey("products.id"))
+    anonymous_id: Mapped[str | None] = mapped_column(String(36), index=True)  # 기기 익명 ID
+    product_id: Mapped[str | None] = mapped_column(ForeignKey("products.id"), index=True)
+    ean13: Mapped[str | None] = mapped_column(String(14))
+    client_id: Mapped[str | None] = mapped_column(String(36))  # 앱 로컬 scan id (중복 동기화 방지)
     method: Mapped[str] = mapped_column(String(20))  # barcode|vision|ocr|search
     latency_ms: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -347,3 +350,70 @@ class RawMfdsRecord(Base):
     payload: Mapped[dict] = mapped_column(JSONType)
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+# ───────────────────────── OCR / 기여 / 기기 ─────────────────────────
+
+
+class OcrJob(Base):
+    """라벨 OCR 작업. 앱은 job_id 로 1초 폴링한다 (docs/06 §2)."""
+
+    __tablename__ = "ocr_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    status: Mapped[str] = mapped_column(String(10), default="queued")  # queued|running|done|failed
+    image_key: Mapped[str] = mapped_column(String(300))
+    ean13: Mapped[str | None] = mapped_column(String(14))
+    product_id: Mapped[str | None] = mapped_column(ForeignKey("products.id"))
+    user_id: Mapped[str | None] = mapped_column(String(36))
+    ocr_text: Mapped[str | None] = mapped_column(Text)
+    result: Mapped[dict | None] = mapped_column(JSONType)
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class LabelContribution(Base):
+    """사용자가 확인·수정해 제출한 라벨 정보. fingerprint 가 같은 제보가 n개 모이면 verified."""
+
+    __tablename__ = "label_contributions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    product_id: Mapped[str] = mapped_column(ForeignKey("products.id"), index=True)
+    job_id: Mapped[str | None] = mapped_column(ForeignKey("ocr_jobs.id"))
+    user_id: Mapped[str | None] = mapped_column(String(36))
+    fingerprint: Mapped[str] = mapped_column(String(64), index=True)
+    extraction: Mapped[dict] = mapped_column(JSONType)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Device(Base):
+    """푸시 토큰. 비회원도 등록 가능(user_id null) — 회수 알림은 scans 로 매칭."""
+
+    __tablename__ = "devices"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    expo_push_token: Mapped[str] = mapped_column(String(200), unique=True)
+    platform: Mapped[str] = mapped_column(String(10))
+    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True)
+    anonymous_id: Mapped[str | None] = mapped_column(String(36), index=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class RecallNotification(Base):
+    """어떤 회수를 어떤 기기에 보냈는지(중복 발송 방지)."""
+
+    __tablename__ = "recall_notifications"
+    __table_args__ = (UniqueConstraint("recall_id", "device_id", name="uq_recall_device"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    recall_id: Mapped[str] = mapped_column(ForeignKey("recalls.id"))
+    device_id: Mapped[str] = mapped_column(ForeignKey("devices.id"))
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    ticket: Mapped[str | None] = mapped_column(String(100))

@@ -7,9 +7,18 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 from datetime import date
 
 import pytest
+
+# 설정은 import 시점에 읽히므로 app 을 import 하기 전에 환경을 고정한다.
+os.environ.setdefault("EODISAN_LABEL_EXTRACTION_ENABLED", "0")  # 테스트에서 Claude 호출 금지
+os.environ.setdefault("EODISAN_UPLOAD_DIR", tempfile.mkdtemp(prefix="eodisan-uploads-"))
+os.environ.setdefault("EODISAN_SUPABASE_JWT_SECRET", "test-secret-test-secret-test-secret-1234")
+os.environ.setdefault("EODISAN_PROFILE_ENCRYPTION_KEY", "Zm9vYmFyYmF6cXV4Zm9vYmFyYmF6cXV4Zm9vYmFyYmE=")
+os.environ.setdefault("EODISAN_LABEL_VERIFY_THRESHOLD", "2")
 from fastapi.testclient import TestClient
 from sqlalchemy import StaticPool, create_engine, event, select
 from sqlalchemy.orm import Session
@@ -53,11 +62,30 @@ def db(engine):
 
 
 @pytest.fixture
-def client(db):
+def client(db, monkeypatch):
     app.dependency_overrides[get_db] = lambda: db
+    # OCR 인라인 처리(BackgroundTasks)가 쓰는 세션도 같은 테스트 커넥션에 묶는다
+    import app.routers.ocr as ocr_router
+
+    monkeypatch.setattr(ocr_router, "SessionLocal",
+                        lambda: Session(bind=db.get_bind(), expire_on_commit=False,
+                                        join_transaction_mode="create_savepoint"))
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def auth_headers():
+    """Supabase 형식 JWT (HS256, aud=authenticated)."""
+    import time
+
+    import jwt
+
+    token = jwt.encode({"sub": "11111111-2222-3333-4444-555555555555", "aud": "authenticated",
+                        "email": "u@example.com", "exp": int(time.time()) + 3600},
+                       os.environ["EODISAN_SUPABASE_JWT_SECRET"], algorithm="HS256")
+    return {"Authorization": f"Bearer {token}"}
 
 
 KIMCHI_C002 = {
