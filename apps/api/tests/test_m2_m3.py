@@ -185,6 +185,7 @@ def test_mock_login_flow(client, monkeypatch, kimchi):
     """목업 로그인: 토큰 발급 → 회원 전용 API 사용. 같은 이름은 같은 계정."""
     from app.config import get_settings
 
+    monkeypatch.setattr(get_settings(), "auth_mock", False)  # 로컬 .env 와 무관하게 시작
     assert client.post("/v1/auth/mock/token", json={"name": "다영"}).status_code == 404  # 꺼져 있으면 숨김
     monkeypatch.setattr(get_settings(), "auth_mock", True)
     monkeypatch.setattr(get_settings(), "supabase_jwt_secret", None)  # 목업 비밀로 검증되는지
