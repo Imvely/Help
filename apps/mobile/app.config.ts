@@ -41,6 +41,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     'expo-sqlite',
     'expo-secure-store',
+    [
+      'expo-build-properties',
+      {
+        // VisionCamera 4.x 는 Android minSdk 26 이상이 필요합니다.
+        // usesCleartextTraffic: 개발 중 PC 의 http://<IP>:8000 서버에 붙기 위해 평문 HTTP 허용(운영 빌드에서는 false 로).
+        android: { minSdkVersion: 26, usesCleartextTraffic: true },
+      },
+    ],
     // 회수 푸시 알림(P1-4). 아이콘·색상은 에셋이 준비되면 옵션으로 추가합니다.
     'expo-notifications',
     // Sign in with Apple entitlement
