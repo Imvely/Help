@@ -15,14 +15,22 @@ import { allergenLabel, KR_MANDATORY_ALLERGENS } from '@/domain';
 import { Section } from './Section';
 import { colors, radius, spacing } from './theme';
 
-/** 원산지 빠른 선택. '알 수 없음' 은 null 로 저장(추정 금지 원칙). */
-const ORIGIN_PRESETS: { label: string; value: string | null }[] = [
-  { label: '국산', value: '국산' },
-  { label: '중국산', value: '중국산' },
-  { label: '미국산', value: '미국산' },
-  { label: '외국산', value: '외국산' },
-  { label: '알 수 없음', value: null },
+/**
+ * 원산지 빠른 선택. 서버 OCR 결과는 ISO 코드("KR","CN"…)/"외국산" 으로 오고 제보도 코드로 보냅니다.
+ * '알 수 없음' 은 null 로 저장(추정 금지 원칙). `aliases` 는 사용자가 직접 친 라벨 표기를 같은 칩으로 인식하기 위한 것.
+ */
+const ORIGIN_PRESETS: { label: string; value: string | null; aliases: string[] }[] = [
+  { label: '국산', value: 'KR', aliases: ['국산', '국내산', '한국', '한국산', '대한민국'] },
+  { label: '중국산', value: 'CN', aliases: ['중국', '중국산'] },
+  { label: '미국산', value: 'US', aliases: ['미국', '미국산'] },
+  { label: '외국산', value: '외국산', aliases: ['수입산'] },
+  { label: '알 수 없음', value: null, aliases: ['unknown', '알 수 없음'] },
 ];
+
+function presetMatches(preset: (typeof ORIGIN_PRESETS)[number], origin: string | null): boolean {
+  if (origin === null || origin === '') return preset.value === null;
+  return preset.value === origin || preset.aliases.includes(origin.trim());
+}
 
 const CATEGORIES: { value: ProductCategory; label: string }[] = [
   { value: 'food', label: '식품' },
@@ -115,7 +123,7 @@ export function LabelEditor({ value, onChange, newProduct, onChangeNewProduct }:
             </View>
             <View style={styles.chips}>
               {ORIGIN_PRESETS.map((o) => {
-                const on = ing.origin === o.value;
+                const on = presetMatches(o, ing.origin);
                 return (
                   <Pressable
                     key={o.label}
@@ -130,7 +138,7 @@ export function LabelEditor({ value, onChange, newProduct, onChangeNewProduct }:
             <TextInput
               value={ing.origin ?? ''}
               onChangeText={(t) => updateIngredient(i, { origin: t.trim() ? t : null })}
-              placeholder="원산지 직접 입력 (예: 베트남산)"
+              placeholder="원산지 직접 입력 (예: 베트남산, VN)"
               placeholderTextColor={colors.textMuted}
               style={[styles.input, styles.inputSm]}
             />

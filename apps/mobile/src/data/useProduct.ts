@@ -10,7 +10,7 @@
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
-import { getProductByBarcode, isNotFoundError } from './api';
+import { getProductByBarcode, isNotFoundError, postScanEvent } from './api';
 import { getCachedProduct, putCachedProduct, recordScan } from './cache';
 import type { Product } from './types';
 
@@ -33,6 +33,8 @@ export async function fetchProductByBarcode(ean13: string, signal?: AbortSignal)
     const product = await getProductByBarcode(ean13, { signal });
     await putCachedProduct(ean13, product);
     void recordScan({ ean13, productId: product.product.id, name: product.product.name, method: 'barcode' });
+    // 회수 푸시(P1-4) 매칭용 스캔 이벤트. 비회원도 X-Anonymous-Id 로 기록되며 실패는 무시합니다.
+    void postScanEvent({ ean13, product_id: product.product.id, method: 'barcode' }).catch(() => undefined);
     return { product, from: 'network' };
   } catch (err) {
     // 404 는 "DB 에 없음" 이므로 그대로 올려서 OCR 등록 CTA 를 띄웁니다.

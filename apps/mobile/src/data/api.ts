@@ -23,6 +23,7 @@ import type {
   RecallListResponse,
   RemoteProfile,
   RemoteProfilesResponse,
+  ScanMethod,
   ScanUploadRequest,
 } from './types';
 
@@ -227,9 +228,11 @@ export function submitLabelContribution(
 // 회원 동기화 (/me/*) — Authorization 헤더가 있어야 합니다
 // ---------------------------------------------------------------------------
 
-/** GET /me/profiles — 서버에 저장된(암호화된) 프로필 목록 */
-export function getRemoteProfiles(opts?: RequestOptions): Promise<RemoteProfilesResponse> {
-  return request<RemoteProfilesResponse>('GET', '/me/profiles', undefined, opts);
+/** GET /me/profiles — 서버에 저장된(암호화된) 프로필 목록. 배열 또는 `{ profiles }` 어느 쪽이 와도 배열로 돌려줍니다. */
+export async function getRemoteProfiles(opts?: RequestOptions): Promise<RemoteProfilesResponse> {
+  const res = await request<RemoteProfile[] | { profiles?: RemoteProfile[] }>('GET', '/me/profiles', undefined, opts);
+  if (Array.isArray(res)) return res;
+  return res?.profiles ?? [];
 }
 
 /** PUT /me/profiles — 프로필 upsert. 서버가 payload 를 암호화해 저장합니다. */
@@ -237,12 +240,23 @@ export function putRemoteProfile(body: ProfileUpsertRequest, opts?: RequestOptio
   return request<RemoteProfile>('PUT', '/me/profiles', body, opts);
 }
 
-/** POST /me/scans — 아직 올리지 않은 로컬 스캔 기록 업로드 */
+/** POST /me/scans — 아직 올리지 않은 로컬 스캔 기록 업로드(회원). 응답 { added, skipped } */
 export function postScans(
   body: ScanUploadRequest,
   opts?: RequestOptions,
-): Promise<{ accepted?: number } | undefined> {
+): Promise<{ added?: number; skipped?: number } | undefined> {
   return request('POST', '/me/scans', body, opts);
+}
+
+/**
+ * POST /scans — 비회원 포함 스캔 이벤트 한 건(204). 서버가 "내가 스캔한 제품이 회수되면" 푸시(P1-4)를 보낼 때
+ * X-Anonymous-Id 로 기기를 찾는 데 씁니다. 실패해도 무시하는 fire-and-forget 호출입니다.
+ */
+export function postScanEvent(
+  body: { ean13?: string | null; product_id?: string | null; method?: ScanMethod; latency_ms?: number },
+  opts?: RequestOptions,
+): Promise<void> {
+  return request<void>('POST', '/scans', { method: 'barcode', ...body }, { timeoutMs: 5000, ...opts });
 }
 
 // ---------------------------------------------------------------------------

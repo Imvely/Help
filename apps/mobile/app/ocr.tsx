@@ -83,6 +83,10 @@ export default function OcrScreen() {
         );
         setJobId(result.jobId);
         setExtraction(result.extraction);
+        // 서버가 제품명을 읽었으면 신규 제품 입력란에 미리 채웁니다(사용자가 고칠 수 있음).
+        if (result.extraction.product_name) {
+          setNewProduct((prev) => (prev.product_name ? prev : { ...prev, product_name: result.extraction.product_name ?? '' }));
+        }
         setStep('edit');
       } catch (err) {
         if (controller.signal.aborted) return;

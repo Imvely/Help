@@ -124,20 +124,20 @@ src/
 1. **촬영** — `LabelCamera`(VisionCamera `photo` 모드) 로 정지 사진. 가이드 "원재료명 영역을 네모 안에".
 2. **업로드** — `expo-image-manipulator` 로 긴 변 1600px·JPEG 85% 로 줄인 뒤 `POST /v1/ocr/label` (multipart `image` + `ean13`/`product_id` 폼 필드) → `202 { job_id, status }`.
 3. **폴링** — `GET /v1/ocr/jobs/{job_id}` 를 1초마다, 최대 60초. `status: queued|running|done|failed`, `result: LabelExtraction|null`.
-4. **확인·수정** — `LabelEditor` 에서 원재료(이름 + 원산지 프리셋 국산/중국산/미국산/외국산/알 수 없음 + 직접 입력), 제조국·제조원·판매원, 카페인 mg, 알레르기 포함/혼입 가능 칩(식약처 19항목)을 고칩니다. `product_id` 가 없으면 제품명·브랜드·분류(식품/화장품) 입력란이 추가됩니다.
+4. **확인·수정** — `LabelEditor` 에서 원재료(이름 + 원산지 프리셋 국산/중국산/미국산/외국산/알 수 없음 + 직접 입력 — 프리셋은 ISO 코드 `KR`/`CN`/`US`/`외국산`/`null` 로 저장되고 서버 OCR 결과도 같은 코드로 옵니다), 제조국·제조원·판매원, 카페인 mg, 알레르기 포함/혼입 가능 칩(식약처 19항목)을 고칩니다. `product_id` 가 없으면 제품명·브랜드·분류(식품/화장품) 입력란이 추가됩니다.
 5. **제보** — `POST /v1/contributions/label` `{ job_id, ean13?, product_id?, product_name?, brand?, category?, extraction }` → `201 { product_id, created }`. 성공하면 바코드 쿼리를 무효화(스캔 화면이 새 제품을 보게)하고 `/product/{product_id}` 로 이동합니다.
 
 화면에는 "제보해 주신 정보는 '사용자 제보(미검증)'으로 표시되며 3명 이상 일치하면 검증됨으로 바뀝니다." 를 고정 표시합니다(docs/02 §7).
 데이터 로직은 `src/data/ocr.ts`(리사이즈·업로드·폴링, AbortSignal 취소), API 함수는 `src/data/api.ts` 의 `submitLabelOcr` / `getOcrJob` / `submitLabelContribution` 입니다.
 
-> 현재 `apps/api` 의 `/ocr/label` 은 인메모리 큐 스텁이라 실제 OCR 워커 없이는 `queued` 에서 멈춥니다(테스트용 `text` 폼 필드로 즉시 파싱 가능). `/contributions/label`, `/products/{id}/alternatives`, `/me/*` 는 앱 쪽 계약만 먼저 구현된 상태입니다.
+> 서버 쪽(`apps/api`): `/ocr/label` 은 `OCR_INLINE` 설정이면 백그라운드 태스크로 즉시 처리하고, 아니면 워커(`app/pipeline/ocr_worker.py`)가 처리합니다. `GET /me/profiles` 는 배열을 돌려주며(`api.ts` 가 `{ profiles }` 래퍼도 허용), `POST /contributions/label` 응답에는 `source`·`confirmations` 가 추가로 옵니다.
 
 ## 로그인·동기화·푸시 (M11 / M12 / P1-4)
 
 - **익명 세션**: 앱 시작 시 `signInAnonymously` (서버 설정이 있을 때). 모든 API 요청에 `Authorization: Bearer <JWT>` 와 `X-Anonymous-Id`(기기 UUID, SecureStore) 가 붙습니다.
 - **로그인**: 프로필 탭 → 카카오 / Google 은 `linkIdentity`(익명 계정 승격, user id 유지) + `expo-web-browser`, Apple 은 iOS 에서만 `expo-apple-authentication` → `signInWithIdToken`. 세 버튼은 같은 크기로 나란히 노출됩니다(App Store 4.8).
 - **동기화(opt-in)**: "민감정보 동기화 동의" 토글을 켜고 로그인한 경우에만 `PUT /v1/me/profiles` (`payload` 는 프로필 JSON 문자열, 서버가 암호화). 로그인 직후 `GET /v1/me/profiles` 로 병합하되 **로컬 SecureStore 가 항상 원본**(로컬이 비어 있을 때만 서버 값을 가져옴).
-- **히스토리**: 로그인 직후 `scans.synced = 0` 인 행을 `POST /v1/me/scans` 로 올리고 `synced = 1` 표시(`cache.ts` 의 마이그레이션 가드가 열을 추가).
+- **히스토리**: 로그인 직후 `scans.synced = 0` 인 행을 `POST /v1/me/scans` 로 올리고 `synced = 1` 표시(`cache.ts` 의 마이그레이션 가드가 열을 추가). 각 행에는 중복 방지용 `client_id`(기기 UUID 23자 + 로컬 행 id)가 붙습니다. 비회원 스캔은 회수 푸시 매칭을 위해 `POST /v1/scans`(204, fire-and-forget)로 한 건씩 보냅니다.
 - **회수 알림**: "회수 알림 받기" 토글 → 권한 요청 → Expo 푸시 토큰 → `POST /v1/devices { expo_push_token, platform, enabled }`. 끄면 `enabled:false` 로 다시 보냅니다. 실기기 + `extra.eas.projectId` 가 필요합니다.
 
 ## React Native 가 처음이라면

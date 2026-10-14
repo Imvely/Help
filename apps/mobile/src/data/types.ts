@@ -89,7 +89,11 @@ export type ProductBrief = ProductInfo;
 
 export type OcrJobStatus = 'queued' | 'running' | 'done' | 'failed';
 
-/** OCR 가 구조화한 원재료 한 줄. `origin` 은 라벨 표기 그대로("중국산", "국산"…) 또는 null */
+/**
+ * OCR 가 구조화한 원재료 한 줄.
+ * `origin` 은 서버가 정규화한 값 — ISO 코드("KR","CN"…) 또는 "외국산" — 이지만, 사용자가 직접 입력하면
+ * "중국산" 같은 라벨 표기가 그대로 갈 수도 있습니다. 서버(contributions._norm_country)가 둘 다 받습니다.
+ */
 export interface ExtractedIngredient {
   name: string;
   origin: string | null;
@@ -112,6 +116,10 @@ export interface LabelExtraction {
   /** 알레르겐 코드(@eodisan/domain 의 KR_MANDATORY_ALLERGENS 와 같은 체계) */
   allergens_detected: string[];
   may_contain_detected: string[];
+  /** 앞면/라벨에서 읽은 제품명(있으면 신규 제품 입력란에 미리 채움). 서버 ocr_worker 가 추가로 내려줍니다. */
+  product_name?: string | null;
+  /** '원산지:' 라인 원문(참고용) */
+  country_of_origin?: string | null;
 }
 
 /** POST /ocr/label 202 응답 */
@@ -145,6 +153,10 @@ export interface LabelContributionResponse {
   product_id: string;
   /** true 면 이번 제보로 제품이 새로 만들어짐 */
   created: boolean;
+  /** ocr_user(미검증) | ocr_verified(3명 이상 일치) */
+  source?: string;
+  /** 같은 값을 제보한 사용자 수 */
+  confirmations?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -160,9 +172,8 @@ export interface RemoteProfile {
   updated_at?: string | null;
 }
 
-export interface RemoteProfilesResponse {
-  profiles: RemoteProfile[];
-}
+/** 서버는 배열을 그대로 돌려줍니다(list[ProfileOut]). api.ts 가 `{ profiles }` 래퍼도 받아 배열로 통일합니다. */
+export type RemoteProfilesResponse = RemoteProfile[];
 
 /** PUT /me/profiles 요청 본문 */
 export interface ProfileUpsertRequest {
@@ -174,6 +185,8 @@ export interface ProfileUpsertRequest {
 
 /** POST /me/scans 요청의 한 줄 */
 export interface ScanUpload {
+  /** 기기별 중복 방지 키(최대 36자). 같은 행을 두 번 올려도 서버가 건너뜁니다. */
+  client_id: string;
   ean13: string | null;
   product_id: string | null;
   method: ScanMethod;

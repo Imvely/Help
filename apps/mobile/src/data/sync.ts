@@ -8,7 +8,7 @@
  * 모든 함수는 실패해도 throw 하지 않고 결과 객체를 돌려줍니다(동기화 실패가 앱을 막으면 안 되므로).
  */
 import { getRemoteProfiles, postScans, putRemoteProfile } from './api';
-import { useAuth } from './auth';
+import { getAnonymousId, useAuth } from './auth';
 import { listUnsyncedScans, markScansSynced } from './cache';
 import { profileHasSettings, useProfile } from './profile';
 import { useSettings } from './settings';
@@ -71,7 +71,7 @@ export async function mergeProfileOnLogin(): Promise<SyncResult> {
   if (!canSync()) return { ok: false, uploaded: 0, error: '로그인 필요' };
   try {
     const remote = await getRemoteProfiles();
-    const mine = remote.profiles.find((p) => p.label === PROFILE_LABEL) ?? remote.profiles[0];
+    const mine = remote.find((p) => p.label === PROFILE_LABEL) ?? remote[0];
     const local = useProfile.getState().profile;
 
     if (mine && !profileHasSettings(local)) {
@@ -105,7 +105,10 @@ export async function pushScans(): Promise<SyncResult> {
   try {
     const rows = await listUnsyncedScans();
     if (rows.length === 0) return { ok: true, uploaded: 0 };
+    // client_id(≤36자) = 기기 UUID 앞 23자 + '-' + 로컬 행 id → 기기 간에 겹치지 않고 재전송해도 서버가 중복을 건너뜁니다.
+    const device = (await getAnonymousId()).slice(0, 23);
     const scans: ScanUpload[] = rows.map((r) => ({
+      client_id: `${device}-${r.id}`,
       ean13: r.ean13,
       product_id: r.product_id,
       method: r.method,
