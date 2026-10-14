@@ -5,7 +5,35 @@
 > ② 성분 위험도(대체당·첨가물·알레르기·카페인),
 > ③ 내 건강 프로필에 맞춘 개인화 경고를 **즉시** 보여주는 모바일 앱.
 
-이 레포(`help`)는 앱의 **기획·기술 설계 문서**로 시작합니다. 코드 스캐폴드(Expo 앱 + FastAPI 서버)는 설계 승인 후 다음 PR에서 추가됩니다.
+이 레포(`help`)는 기획·기술 설계 문서(`docs/`)와 모노레포 코드로 구성됩니다.
+
+## 레포 구조
+
+```
+apps/api/          FastAPI 서버 — 제품·원산지·성분·회수 API, 식약처 데이터 파이프라인, 성분 지식 베이스
+apps/mobile/       Expo(React Native) 앱 — 바코드 실시간 스캔, 결과 카드, 히스토리, 프로필
+packages/domain/   순수 TypeScript 개인화 엔진 — 알레르기·카페인·임신·당뇨·고혈압 판정, 원산지 배지 문구
+docs/              기획·기술 설계 문서 (아래 목차)
+docker-compose.yml Postgres(pgvector)·Redis·MinIO·API·워커
+.github/workflows  CI (pytest·ruff / vitest·tsc / tsc)
+```
+
+## 빠른 시작
+
+```bash
+# 1) 서버 (SQLite, 외부 의존 없음)
+cd apps/api && uv venv .venv && uv pip install -p .venv/bin/python -e ".[dev]"
+.venv/bin/alembic upgrade head && .venv/bin/python -m app.kb.loader
+.venv/bin/uvicorn app.main:app --reload        # http://localhost:8000/docs
+
+# 2) 도메인 패키지 테스트
+cd packages/domain && npm install && npm test
+
+# 3) 앱 (Expo dev build — Expo Go 불가, VisionCamera 네이티브 모듈)
+cd apps/mobile && npm install && npx expo prebuild && npx expo run:android   # 또는 run:ios
+```
+
+각 디렉터리의 README 에 상세 안내가 있습니다: [apps/api/README.md](apps/api/README.md), [apps/mobile/README.md](apps/mobile/README.md).
 
 ## 문서 읽는 순서
 

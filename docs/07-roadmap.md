@@ -13,17 +13,20 @@
 
 MVP 출시 = M1+M2+M3 (약 3개월). M4는 데이터가 쌓이는 동안 병렬로 모델 준비.
 
-## 2. 다음 PR(스캐폴드) 범위
+## 2. 스캐폴드 현황 (2026-10-14 완료)
 
-설계 승인 후 바로 만들 것:
 ```
-apps/mobile/      Expo SDK 55+ 프로젝트, VisionCamera v5, 바코드 스캐너, 결과 카드 더미
-apps/api/         FastAPI + SQLAlchemy + Alembic, /products/by-barcode 더미, pytest
-packages/domain/  개인화 판정 순수 TS(앱·테스트 공유)
-scripts/mfds/     C002/I0490 덤프 스크립트(인증키 .env), 정규화 파서 + 테스트
-docker-compose.yml  api, worker, postgres(pgvector), redis, minio
-.github/workflows/  lint·test CI
+apps/mobile/      Expo SDK 57 + VisionCamera 4.7 바코드 스캐너, 결과 카드, 상세/기록/프로필/검색/정정 화면, SQLite 캐시
+apps/api/         FastAPI + SQLAlchemy 2 + Alembic, 전체 스키마(docs/04), products/recalls/kb/contributions/recognize/ocr
+                  라우터, 원재료 파서, 알레르겐 매칭, 원산지 문구, KB 시드(성분 33·알레르겐 33), 식약처 파이프라인 CLI
+                  (app/pipeline/mfds_sync.py: dump/normalize/recalls), pytest 36개
+packages/domain/  개인화 엔진(알레르기·카페인·임신·당뇨·고혈압·신장·비건·어린이·등급), vitest 65개
+docker-compose.yml  postgres(pgvector)·redis·minio·api·worker
+.github/workflows/ci.yml  pytest+ruff / vitest+tsc / tsc
 ```
+
+M0 잔여: 실제 식약처 인증키로 C002 전체 덤프 실행, 정규화 매칭률 측정, 수입식품정보마루 제공신청.
+M1 잔여: 실기기 빌드(EAS dev build), 앱 도메인 어댑터를 `@eodisan/domain` 실제 패키지로 교체, 레이턴시 측정.
 
 ## 3. 리스크 레지스터
 

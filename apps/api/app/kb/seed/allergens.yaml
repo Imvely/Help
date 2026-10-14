@@ -1,0 +1,37 @@
+# 알레르겐 온톨로지 (docs/04 §2-3, docs/05 §4)
+# code: 가장 작은 단위. parent: 상위 코드. synonyms: 원재료명 텍스트 매칭용(동의어).
+# jurisdictions: 의무표시 국가. KR 19항목 = 식품표시광고법 시행규칙 별표2 (2020.9).
+allergens:
+  - {code: egg, name_ko: 알류, synonyms: [계란, 달걀, 난백, 난황, 전란, 난류, 메추리알, 오리알], jurisdictions: [KR, EU, US, JP]}
+  - {code: milk, name_ko: 우유, synonyms: [유청, 유당, 탈지분유, 전지분유, 치즈, 버터, 크림, 카제인, 유크림, 연유, 요거트, 발효유, 유단백], jurisdictions: [KR, EU, US, JP]}
+  - {code: buckwheat, name_ko: 메밀, synonyms: [메밀가루], jurisdictions: [KR, JP]}
+  - {code: peanut, name_ko: 땅콩, synonyms: [낙화생, 피넛], jurisdictions: [KR, EU, US, JP]}
+  - {code: soy, name_ko: 대두, synonyms: [콩, 두부, 된장, 간장, 두유, 대두단백, 분리대두단백, 콩기름, 대두유, 대두레시틴, 청국장, 고추장], jurisdictions: [KR, EU, US]}
+  - {code: wheat, name_ko: 밀, synonyms: [밀가루, 소맥, 소맥분, 글루텐, 밀전분, 통밀, 밀단백], jurisdictions: [KR, EU, US, JP]}
+  - {code: mackerel, name_ko: 고등어, synonyms: [], jurisdictions: [KR]}
+  - {code: shellfish, name_ko: 갑각류·조개류, synonyms: [], jurisdictions: []}
+  - {code: shellfish.crustacean, name_ko: 갑각류, parent: shellfish, synonyms: [갑각류], jurisdictions: [EU, US]}
+  - {code: shellfish.crustacean.crab, name_ko: 게, parent: shellfish.crustacean, synonyms: [꽃게, 대게, 게살, 게맛살], jurisdictions: [KR, JP]}
+  - {code: shellfish.crustacean.shrimp, name_ko: 새우, parent: shellfish.crustacean, synonyms: [새우젓, 건새우, 새우가루, 새우분말], jurisdictions: [KR, JP]}
+  - {code: pork, name_ko: 돼지고기, synonyms: [돈육, 돼지, 돈지, 베이컨, 햄, 라드], jurisdictions: [KR]}
+  - {code: peach, name_ko: 복숭아, synonyms: [복숭아과즙, 복숭아농축액], jurisdictions: [KR]}
+  - {code: tomato, name_ko: 토마토, synonyms: [토마토페이스트, 토마토케찹, 토마토케첩, 토마토퓨레], jurisdictions: [KR]}
+  - {code: sulfite, name_ko: 아황산류, synonyms: [아황산나트륨, 무수아황산, 메타중아황산칼륨, 메타중아황산나트륨, 산성아황산나트륨, 차아황산나트륨, 이산화황], jurisdictions: [KR, EU]}
+  - {code: tree_nut, name_ko: 견과류, synonyms: [], jurisdictions: [EU, US]}
+  - {code: tree_nut.walnut, name_ko: 호두, parent: tree_nut, synonyms: [호두분태], jurisdictions: [KR, JP]}
+  - {code: tree_nut.pine_nut, name_ko: 잣, parent: tree_nut, synonyms: [], jurisdictions: [KR]}
+  - {code: tree_nut.almond, name_ko: 아몬드, parent: tree_nut, synonyms: [], jurisdictions: []}
+  - {code: tree_nut.cashew, name_ko: 캐슈넛, parent: tree_nut, synonyms: [캐슈], jurisdictions: [JP]}
+  - {code: chicken, name_ko: 닭고기, synonyms: [계육, 닭, 치킨], jurisdictions: [KR]}
+  - {code: beef, name_ko: 쇠고기, synonyms: [우육, 소고기, 쇠고기엑기스, 소고기엑기스, 사골], jurisdictions: [KR]}
+  - {code: mollusc, name_ko: 연체류, synonyms: [], jurisdictions: [EU]}
+  - {code: mollusc.bivalve, name_ko: 조개류, parent: mollusc, synonyms: [조개, 바지락, 조개류, 꼬막, 가리비, 백합], jurisdictions: [KR]}
+  - {code: mollusc.squid, name_ko: 오징어, parent: mollusc, synonyms: [오징어, 한치], jurisdictions: [KR]}
+  - {code: mollusc.bivalve.oyster, name_ko: 굴, parent: mollusc.bivalve, synonyms: [굴, 굴소스, 굴액젓], jurisdictions: [KR]}
+  - {code: mollusc.bivalve.abalone, name_ko: 전복, parent: mollusc.bivalve, synonyms: [], jurisdictions: [KR]}
+  - {code: mollusc.bivalve.mussel, name_ko: 홍합, parent: mollusc.bivalve, synonyms: [], jurisdictions: [KR]}
+  - {code: sesame, name_ko: 참깨, synonyms: [참기름, 깨], jurisdictions: [EU, US]}
+  - {code: fish, name_ko: 생선, synonyms: [멸치, 참치, 연어, 명태, 어분, 피시소스], jurisdictions: [EU, US]}
+  - {code: celery, name_ko: 셀러리, synonyms: [], jurisdictions: [EU]}
+  - {code: mustard, name_ko: 겨자, synonyms: [머스타드], jurisdictions: [EU]}
+  - {code: lupin, name_ko: 루핀, synonyms: [], jurisdictions: [EU]}

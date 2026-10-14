@@ -18,3 +18,10 @@ iOS/Android 동시 지원, 셔터 없는 실시간 인식(30fps 프레임 처리
 ## 결과
 - Expo Go 사용 불가(dev build 필수). 버전 고정과 분기 1회 업그레이드 정책.
 - Nitro/worklets 생태계가 젊어 이슈 추적 필요.
+
+## 후속 결정 (2026-10-14, 스캐폴드 시점)
+- 실제 스캐폴드는 **Expo SDK 57 + VisionCamera 4.7.x** 로 시작한다. v5(5.2.x)는 Nitro 전면 재작성으로
+  내장 `useCodeScanner` 와 Expo config plugin 이 없어 바코드 MVP(M1) 경로가 길어진다.
+  v4 는 RN 0.86 New Architecture 를 지원하고 ML Kit/AVFoundation 코드 스캐너를 내장한다.
+- 카메라 코드는 `apps/mobile/src/camera/ScanCamera.tsx` 한 파일에 격리해 M4(이미지 인식, 프레임 프로세서 필요)
+  시점에 v5 로 이전한다.
