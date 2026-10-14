@@ -103,7 +103,11 @@ def load_ingredients(db: Session, path: Path = SEED_DIR / "ingredients.yaml") ->
 
 
 def load_all(db: Session) -> dict[str, int]:
-    return {"allergens": load_allergens(db), "ingredients": load_ingredients(db)}
+    return {
+        "allergens": load_allergens(db),
+        "ingredients": load_ingredients(db),
+        "common_ingredients": load_ingredients(db, SEED_DIR / "common_ingredients.yaml"),
+    }
 
 
 if __name__ == "__main__":

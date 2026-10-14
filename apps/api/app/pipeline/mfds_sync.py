@@ -41,9 +41,12 @@ def record_key(service: str, row: dict) -> str:
 
 
 def store_raw(db: Session, service: str, rows: list[dict]) -> int:
-    n = 0
+    """raw 테이블에 upsert. 같은 페이지 안의 중복 키(예: C005 의 동일 바코드)는 마지막 행만 남긴다."""
+    deduped: dict[str, dict] = {}
     for row in rows:
-        key = record_key(service, row)
+        deduped[record_key(service, row)] = row
+    n = 0
+    for key, row in deduped.items():
         existing = db.execute(
             select(m.RawMfdsRecord).where(m.RawMfdsRecord.service == service,
                                           m.RawMfdsRecord.record_key == key)

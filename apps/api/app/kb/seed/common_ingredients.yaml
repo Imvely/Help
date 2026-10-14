@@ -1,0 +1,81 @@
+# 자주 나오는 기본 식재료·범주명. 식약처 C002 실데이터 1,000건에서 미매칭 상위 항목으로 만들었다.
+# grade 0(안전)은 "그 자체로 위해 우려가 없는 일반 식품"이라는 뜻이며, 영양(당·나트륨)은 영양 정보에서 따로 본다.
+# 범주명(혼합제제, 복합조미식품, 소스 등)은 세부 성분이 라벨에 없으므로 등급을 두지 않는다(미확인으로 표시).
+defaults: &safe
+  grade: 0
+  evidence: regulatory
+  regulatory_status: {KR: 식품, EU: 식품, US: 식품}
+  groups: []
+  sources: ["https://www.foodsafetykorea.go.kr/"]
+  reviewed: 2026-10-14
+
+ingredients:
+  # ── 물·당류·전분 ──
+  - {name_ko: 정제수, name_en: Water, functions: [], synonyms: [물, 정수, 음용수], hazard: {<<: *safe, summary: "물입니다."}}
+  - {name_ko: 물엿, name_en: Starch syrup, functions: [], synonyms: [맥아물엿, 고과당물엿, 쌀엿], hazard: {<<: *safe, summary: "전분을 분해해 만든 시럽. 당류이므로 섭취량은 영양 정보에서 확인하세요."}}
+  - {name_ko: 포도당, name_en: Glucose, functions: [], synonyms: [결정포도당, 액상포도당], hazard: {<<: *safe, summary: "단당류. 당류 섭취량에 포함됩니다."}}
+  - {name_ko: 과당, name_en: Fructose, functions: [], synonyms: [기타과당, 액상과당, 고과당], hazard: {<<: *safe, summary: "과일의 단맛 성분. 액상과당(고과당옥수수시럽)도 여기 포함되며 당류 섭취량에 들어갑니다."}}
+  - {name_ko: 덱스트린, name_en: Dextrin, functions: [], synonyms: [말토덱스트린], hazard: {<<: *safe, summary: "전분을 짧게 자른 탄수화물. 농도·질감 조절용."}}
+  - {name_ko: 전분, name_en: Starch, functions: [], synonyms: [옥수수전분, 감자전분, 타피오카전분, 소맥전분, 변성전분, 전분가공품, 찹쌀풀], hazard: {<<: *safe, summary: "식물에서 얻은 탄수화물. 변성전분은 물리·효소 처리로 성질을 바꾼 전분으로 안전합니다."}}
+  - {name_ko: 가당연유, name_en: Sweetened condensed milk, functions: [], synonyms: [연유], hazard: {<<: *safe, summary: "우유에 설탕을 넣고 농축한 것. 우유 알레르기 표시 대상."}}
+  # ── 곡물·가루 ──
+  - {name_ko: 밀가루, name_en: Wheat flour, functions: [], synonyms: [소맥분, 박력분, 중력분, 강력분, 통밀가루], hazard: {<<: *safe, summary: "밀을 빻은 가루. 밀 알레르기·글루텐 표시 대상입니다."}}
+  - {name_ko: 쌀, name_en: Rice, functions: [], synonyms: [멥쌀, 찹쌀, 현미, 쌀가루, 백미], hazard: {<<: *safe, summary: "곡물."}}
+  - {name_ko: 곡류가공품, name_en: Processed cereal, functions: [], synonyms: [두류가공품], hazard: {<<: *safe, summary: "곡물을 가공한 원료의 묶음 이름. 세부 원료는 괄호 안을 보세요."}}
+  # ── 유지 ──
+  - {name_ko: 콩기름, name_en: Soybean oil, functions: [], synonyms: [대두유, 대두기름, 식용유], hazard: {<<: *safe, summary: "콩에서 짠 식용유. 고도 정제유라 대두 알레르기 표시는 제품에 따라 다릅니다."}}
+  - {name_ko: 참기름, name_en: Sesame oil, functions: [], synonyms: [볶은참깨, 참깨], hazard: {<<: *safe, summary: "참깨 기름. EU·미국에서는 참깨가 알레르기 표시 대상입니다."}}
+  - {name_ko: 버터, name_en: Butter, functions: [], synonyms: [가공버터, 우유버터], hazard: {<<: *safe, summary: "우유 지방. 우유 알레르기 표시 대상. 포화지방은 영양 정보에서 확인."}}
+  - {name_ko: 식물성크림, name_en: Non-dairy creamer, functions: [], synonyms: [식물성유지, 가공유크림, 유크림], hazard: {<<: *safe, summary: "식물성 기름으로 만든 크림 대체품. 경화유가 쓰였는지는 괄호 안 원료를 확인하세요."}}
+  - {name_ko: 향미유, name_en: Flavored oil, functions: [], synonyms: [], hazard: {<<: *safe, summary: "향을 입힌 식용유."}}
+  - {name_ko: 마요네즈, name_en: Mayonnaise, functions: [], synonyms: [], hazard: {<<: *safe, summary: "기름·식초·알을 섞은 소스. 알류 알레르기 표시 대상."}}
+  # ── 알·유제품 ──
+  - {name_ko: 계란, name_en: Egg, functions: [], synonyms: [전란, 전란액, 난백액, 난황액, 난황, 난백, 살균전란액, 알가열제품, 달걀], hazard: {<<: *safe, summary: "알류. 알레르기 표시 대상."}}
+  - {name_ko: 우유, name_en: Milk, functions: [], synonyms: [원유, 살균우유, 탈지우유], hazard: {<<: *safe, summary: "우유. 알레르기 표시 대상."}}
+  - {name_ko: 탈지분유, name_en: Skim milk powder, functions: [], synonyms: [전지분유, 혼합분유, 유청분말, 유함유가공품], hazard: {<<: *safe, summary: "우유를 말린 가루. 우유 알레르기 표시 대상."}}
+  - {name_ko: 치즈, name_en: Cheese, functions: [], synonyms: [가공치즈, 자연치즈, 모짜렐라치즈, 체다치즈], hazard: {<<: *safe, summary: "우유 알레르기 표시 대상. 나트륨은 영양 정보에서."}}
+  # ── 채소·향신료 ──
+  - {name_ko: 마늘, name_en: Garlic, functions: [], synonyms: [간마늘, 다진마늘, 마늘분말], hazard: {<<: *safe, summary: "채소."}}
+  - {name_ko: 양파, name_en: Onion, functions: [], synonyms: [양파분말], hazard: {<<: *safe, summary: "채소. 반려동물에게는 독성이 있으니 사람 음식을 주지 마세요."}}
+  - {name_ko: 대파, name_en: Green onion, functions: [], synonyms: [파, 쪽파, 부추], hazard: {<<: *safe, summary: "채소."}}
+  - {name_ko: 생강, name_en: Ginger, functions: [], synonyms: [생강분말], hazard: {<<: *safe, summary: "향신 채소."}}
+  - {name_ko: 당근, name_en: Carrot, functions: [], synonyms: [], hazard: {<<: *safe, summary: "채소."}}
+  - {name_ko: 무, name_en: Radish, functions: [], synonyms: [무말랭이], hazard: {<<: *safe, summary: "채소."}}
+  - {name_ko: 고춧가루, name_en: Red pepper powder, functions: [], synonyms: [고추, 청양고추, 건고추, 고추분말], hazard: {<<: *safe, summary: "고추를 빻은 가루. 원산지 표시 의무 품목(김치류)입니다."}}
+  - {name_ko: 후추가루, name_en: Black pepper, functions: [], synonyms: [후추, 흑후추, 백후추], hazard: {<<: *safe, summary: "향신료."}}
+  - {name_ko: 천연향신료, name_en: Natural spices, functions: [], synonyms: [향신료조제품, 향신료, 통계피, 계피], hazard: {<<: *safe, summary: "향신료 묶음 이름. 어떤 향신료인지는 표시 의무가 없어 알 수 없습니다."}}
+  - {name_ko: 파프리카추출색소, name_en: Paprika oleoresin, e_number: E160c, functions: [착색료], synonyms: [올레오레진 캪시컴, 캡시컴], hazard: {<<: *safe, summary: "파프리카에서 뽑은 천연 색소. 안전합니다."}}
+  - {name_ko: 카라멜색소, name_en: Caramel color, e_number: E150, functions: [착색료], synonyms: [카라멜, 카라멜색소Ⅰ, 카라멜색소Ⅲ, 카라멜색소Ⅳ], hazard: {grade: 1, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "설탕을 가열해 만든 갈색 색소. Ⅲ·Ⅳ형은 제조 중 4-MEI 가 생겨 캘리포니아는 경고 표시를 요구하지만, EFSA·식약처는 허용량 안에서 안전하다고 봅니다.", sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/2004"], reviewed: 2026-10-14}}
+  # ── 콩·장류 ──
+  - {name_ko: 간장, name_en: Soy sauce, functions: [], synonyms: [양조간장, 혼합간장, 진간장, 국간장], hazard: {<<: *safe, summary: "대두·밀 알레르기 표시 대상. 나트륨이 높습니다."}}
+  - {name_ko: 된장, name_en: Doenjang, functions: [], synonyms: [], hazard: {<<: *safe, summary: "대두 발효 장. 대두 알레르기 표시 대상."}}
+  - {name_ko: 고추장, name_en: Gochujang, functions: [], synonyms: [], hazard: {<<: *safe, summary: "대두·밀이 들어가는 장. 알레르기 표시 확인."}}
+  # ── 소금·식초·주류 ──
+  - {name_ko: 재제소금, name_en: Refined salt, functions: [], synonyms: [기타소금, 가공소금, 죽염, 꽃소금], hazard: {<<: *safe, summary: "소금. 나트륨 섭취량은 영양 정보에서."}}
+  - {name_ko: 발효식초, name_en: Vinegar, functions: [], synonyms: [식초, 양조식초, 사과식초, 현미식초], hazard: {<<: *safe, summary: "발효로 만든 식초."}}
+  - {name_ko: 주정, name_en: Ethyl alcohol, functions: [], synonyms: [에탄올, 발효주정, 청주, 일반증류주, 리큐르, 맛술, 미림], hazard: {grade: 1, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [pregnancy], summary: "술 성분(에탄올). 보존·풍미용으로 소량 쓰이지만 임신 중이거나 주류를 피하는 분(할랄 포함)은 확인하세요.", sources: ["https://www.foodsafetykorea.go.kr/"], reviewed: 2026-10-14}}
+  # ── 발효·효소·검 ──
+  - {name_ko: 효모, name_en: Yeast, functions: [], synonyms: [이스트, 효모추출물, 건조효모], hazard: {<<: *safe, summary: "빵·발효에 쓰는 미생물. 효모추출물은 감칠맛 원료입니다."}}
+  - {name_ko: 베이킹파우더, name_en: Baking powder, functions: [팽창제], synonyms: [팽창제제, 탄산수소나트륨, 베이킹소다], hazard: {<<: *safe, summary: "반죽을 부풀리는 첨가물. 일부 제품은 인산염(산성피로인산나트륨)을 포함하니 신장질환이면 확인."}}
+  - {name_ko: 젤라틴, name_en: Gelatin, functions: [겔형성제], synonyms: [돼지젤라틴, 어류젤라틴], hazard: {<<: *safe, summary: "동물 껍질·뼈에서 얻은 단백질. 비건·할랄 여부는 원료(돼지/소/어류)를 확인."}}
+  - {name_ko: 구아검, name_en: Guar gum, e_number: E412, functions: [증점제], synonyms: [로커스트콩검, 타마린드검], hazard: {<<: *safe, summary: "콩류에서 얻은 점성제. 안전합니다."}}
+  - {name_ko: 5-리보뉴클레오티드이나트륨, name_en: Disodium 5'-ribonucleotides, e_number: E635, functions: [향미증진제], synonyms: [리보뉴클레오티드, 5'-리보뉴클레오티드이나트륨], hazard: {grade: 1, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "MSG 와 함께 쓰는 감칠맛 첨가물. 안전하지만 통풍 환자는 퓨린 계열이라 주의 권고.", sources: ["https://www.efsa.europa.eu/"], reviewed: 2026-10-14}}
+  - {name_ko: 천연향료, name_en: Natural flavor, functions: [착향료], synonyms: [천연착향료], hazard: {<<: *safe, summary: "천연 유래 향. 개별 성분은 표시 의무가 없습니다."}}
+  # ── 가공 원료 ──
+  - {name_ko: 코코아분말, name_en: Cocoa powder, functions: [], synonyms: [코코아매스, 코코아버터, 초콜릿, 준초콜릿], hazard: {<<: *safe, summary: "카카오 가공품. 소량의 카페인·테오브로민이 있고, 반려동물에게는 독성."}}
+  - {name_ko: 커피원두, name_en: Coffee, functions: [], synonyms: [커피, 원두, 인스턴트커피], hazard: {grade: 1, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [child, pregnancy], summary: "카페인을 함유합니다. 함량은 영양 정보의 카페인 항목을 보세요.", sources: ["https://www.mfds.go.kr/brd/m_629/view.do?seq=28"], reviewed: 2026-10-14}}
+  - {name_ko: 아몬드분말, name_en: Almond, functions: [], synonyms: [아몬드], hazard: {<<: *safe, summary: "견과류. EU·미국에서는 알레르기 표시 대상."}}
+  - {name_ko: 호두분태, name_en: Walnut, functions: [], synonyms: [], hazard: {<<: *safe, summary: "호두. 한국 알레르기 표시 대상."}}
+  - {name_ko: 액젓, name_en: Fish sauce, functions: [], synonyms: [조미액젓, 멸치액젓, 까나리액젓, 젓갈], hazard: {<<: *safe, summary: "생선·새우 발효 조미료. 새우젓이면 새우 알레르기 표시 대상. 나트륨 높음."}}
+  - {name_ko: 어묵, name_en: Fish cake, functions: [], synonyms: [], hazard: {<<: *safe, summary: "생선살 가공품. 밀·대두 표시 확인."}}
+  - {name_ko: 프레스햄, name_en: Pressed ham, functions: [], synonyms: [햄, 소시지], hazard: {<<: *safe, summary: "가공육. 아질산나트륨 포함 여부는 괄호 안 원료를 확인하세요. 가공육 자체는 IARC 1군."}}
+  - {name_ko: 육수, name_en: Broth, functions: [], synonyms: [사골육수, 멸치육수, 치킨스톡], hazard: {<<: *safe, summary: "국물. 쇠고기·닭고기·생선 알레르기 표시 확인."}}
+  - {name_ko: 레몬, name_en: Lemon, functions: [], synonyms: [레몬농축액, 레몬과즙], hazard: {<<: *safe, summary: "과일."}}
+  - {name_ko: 대추, name_en: Jujube, functions: [], synonyms: [건포도, 냉동딸기, 과채주스, 과·채가공품, 과.채가공품, 당절임], hazard: {<<: *safe, summary: "과일·채소 가공 원료."}}
+  - {name_ko: 빵류, name_en: Bread, functions: [], synonyms: [과자, 잼], hazard: {<<: *safe, summary: "가공식품 원료. 밀·알·우유 표시 확인."}}
+  # ── 범주명(세부 미표시) — 등급 없음, 미확인으로 표시 ──
+  - {name_ko: 혼합제제, name_en: Compound additive, functions: [], synonyms: [식품첨가물혼합제제, 식품첨가물]}
+  - {name_ko: 복합조미식품, name_en: Compound seasoning, functions: [], synonyms: [조미식품, 조미료]}
+  - {name_ko: 소스, name_en: Sauce, functions: [], synonyms: [소스류, 드레싱]}
+  - {name_ko: 당류가공품, name_en: Processed sugar product, functions: [], synonyms: [기타설탕]}
+  - {name_ko: 기타가공품, name_en: Other processed food, functions: [], synonyms: [절임식품, 효소식품, 땅콩 또는 견과류가공품]}
