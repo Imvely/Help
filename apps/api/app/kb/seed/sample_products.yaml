@@ -1,0 +1,78 @@
+# 로컬 데모용 샘플 제품 (식약처 인증키 없이 앱을 돌려보기 위한 가상 데이터).
+# 바코드는 실제 상품과 겹치지 않도록 8800000009xxx 대역을 쓴다. 실제 제품명·브랜드는 쓰지 않는다.
+products:
+  - name: 데모 포기김치 1kg
+    brand: 데모식품
+    manufacturer: 데모식품(주)
+    subcategory: 김치류
+    ean13: "8800000009001"
+    ingredients_raw: "배추(국산), 고춧가루(중국산), 마늘(국산), 정제소금, 새우젓(새우:국산), 설탕, L-글루탐산나트륨(향미증진제), 밀가루(밀:미국산)"
+    manufacturing_country: KR
+    may_contain: [peanut]
+    nutrition: {serving_g: 100, kcal: 30, sodium_mg: 620, sugar_g: 3, protein_g: 2}
+  - name: 데모 제로콜라 355mL
+    brand: 데모음료
+    manufacturer: 데모음료(주)
+    subcategory: 탄산음료
+    ean13: "8800000009002"
+    ingredients_raw: "정제수, 이산화탄소, 카라멜색소, 인산, 아스파탐(합성감미료), 아세설팜칼륨(합성감미료), 천연착향료, 카페인"
+    manufacturing_country: KR
+    nutrition: {serving_ml: 355, kcal: 0, sodium_mg: 40, sugar_g: 0, caffeine_mg: 34}
+  - name: 데모 에너지드링크 250mL
+    brand: 데모에너지
+    manufacturer: 데모베버리지유한공사
+    brand_owner_name: 데모에너지코리아(주)
+    subcategory: 탄산음료
+    ean13: "8800000009003"
+    ingredients_raw: "정제수, 설탕, 포도당, 산도조절제, 타우린, 카페인, 향료, 황색4호, 비타민B군"
+    manufacturing_country: CN
+    manufacturer_country: CN
+    brand_owner_country: KR
+    oem_flag: true
+    origin_confidence: label_read
+    nutrition: {serving_ml: 250, kcal: 110, sodium_mg: 100, sugar_g: 27, caffeine_mg: 94}
+  - name: 데모 슬라이스햄 120g
+    brand: 데모푸드
+    manufacturer: 데모푸드(주)
+    subcategory: 식육가공품
+    ean13: "8800000009004"
+    ingredients_raw: "돼지고기(외국산(스페인,독일)), 정제수, 정제소금, 설탕, 인산염, 아질산나트륨(발색제), 카라기난, 비타민C"
+    manufacturing_country: KR
+    nutrition: {serving_g: 40, kcal: 60, sodium_mg: 380, sugar_g: 1, sat_fat_g: 1.2, protein_g: 6}
+  - name: 데모 초코쿠키 200g
+    brand: 데모제과
+    manufacturer: 데모제과(주)
+    subcategory: 과자류
+    ean13: "8800000009005"
+    ingredients_raw: "밀가루(미국산), 설탕, 팜유(말레이시아산), 코코아분말, 전란액, 탈지분유, 부분경화유, 합성착향료, 적색40호"
+    manufacturing_country: KR
+    may_contain: [peanut, tree_nut.walnut]
+    nutrition: {serving_g: 30, kcal: 150, sodium_mg: 90, sugar_g: 12, sat_fat_g: 4, trans_fat_g: 0.5, protein_g: 2}
+  - name: 데모 무첨가 현미과자 100g
+    brand: 데모제과
+    manufacturer: 데모제과(주)
+    subcategory: 과자류
+    ean13: "8800000009006"
+    ingredients_raw: "현미(국산), 쌀(국산), 정제소금"
+    manufacturing_country: KR
+    nutrition: {serving_g: 30, kcal: 120, sodium_mg: 60, sugar_g: 0, protein_g: 2}
+  - name: 데모 컵라면 110g
+    brand: 데모면
+    manufacturer: 데모면(주)
+    subcategory: 유탕면
+    ean13: "8800000009007"
+    ingredients_raw: "면(밀가루(미국산,호주산), 팜유(말레이시아산), 정제소금), 스프(정제소금, L-글루탐산나트륨(향미증진제), 쇠고기엑기스, 고춧가루(중국산), 간장(대두:외국산), 설탕, 인산염)"
+    manufacturing_country: KR
+    nutrition: {serving_g: 110, kcal: 490, sodium_mg: 1790, sugar_g: 4, sat_fat_g: 8, protein_g: 9}
+  - name: 데모 수입 그릭요거트 150g
+    brand: 데모데어리
+    manufacturer: Demo Dairy GmbH
+    brand_owner_name: 데모수입(주)
+    subcategory: 발효유
+    ean13: "8800000009008"
+    ingredients_raw: "원유(독일산), 유산균"
+    manufacturing_country: DE
+    manufacturer_country: DE
+    brand_owner_country: KR
+    origin_confidence: label_read
+    nutrition: {serving_g: 150, kcal: 130, sodium_mg: 60, sugar_g: 5, sat_fat_g: 5, protein_g: 9}

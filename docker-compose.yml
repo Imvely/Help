@@ -1,0 +1,63 @@
+# 개발용 전체 스택 (docs/03 §6). 실행: docker compose up -d
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: eodisan
+      POSTGRES_PASSWORD: eodisan
+      POSTGRES_DB: eodisan
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eodisan"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: eodisan
+      MINIO_ROOT_PASSWORD: eodisan123
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio:/data]
+
+  api:
+    build: ./apps/api
+    env_file: ./apps/api/.env
+    environment:
+      EODISAN_DATABASE_URL: postgresql+psycopg://eodisan:eodisan@postgres:5432/eodisan
+      EODISAN_REDIS_URL: redis://redis:6379/0
+    ports: ["8000:8000"]
+    volumes: [uploads:/app/data/uploads]
+    depends_on:
+      postgres: { condition: service_healthy }
+    command: sh -c "alembic upgrade head && python -m app.kb.loader && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  # 배치 워커: OCR 작업 처리(1분) · 식약처 회수 동기화 · 회수 푸시. (arq 로 교체 예정)
+  worker:
+    build: ./apps/api
+    env_file: ./apps/api/.env
+    volumes: [uploads:/app/data/uploads]
+    environment:
+      EODISAN_DATABASE_URL: postgresql+psycopg://eodisan:eodisan@postgres:5432/eodisan
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      EODISAN_OCR_INLINE: "0"
+    command: >
+      sh -c "while true; do
+        python -m app.pipeline.ocr_worker;
+        python -m app.pipeline.mfds_sync dump I0490 --max-rows 1000 && python -m app.pipeline.mfds_sync recalls;
+        python -m app.pipeline.push;
+        sleep 60; done"
+    profiles: ["worker"]
+
+volumes:
+  pgdata:
+  minio:
+  uploads:

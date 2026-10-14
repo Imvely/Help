@@ -1,0 +1,72 @@
+# 어디산 (Eodisan) — 비추면 보이는 원산지·성분
+
+> 편의점·마트·집에 있는 **식료품과 화장품**을 카메라로 비추면
+> ① 원산지 / 제조국 / 원재료 원산지(중국 관련 여부 포함),
+> ② 성분 위험도(대체당·첨가물·알레르기·카페인),
+> ③ 내 건강 프로필에 맞춘 개인화 경고를 **즉시** 보여주는 모바일 앱.
+
+이 레포(`help`)는 기획·기술 설계 문서(`docs/`)와 모노레포 코드로 구성됩니다.
+
+## 레포 구조
+
+```
+apps/api/          FastAPI 서버 — 제품·원산지·성분·회수 API, 식약처 데이터 파이프라인, 성분 지식 베이스
+apps/mobile/       Expo(React Native) 앱 — 바코드 실시간 스캔, 결과 카드, 히스토리, 프로필
+packages/domain/   순수 TypeScript 개인화 엔진 — 알레르기·카페인·임신·당뇨·고혈압 판정, 원산지 배지 문구
+docs/              기획·기술 설계 문서 (아래 목차)
+docker-compose.yml Postgres(pgvector)·Redis·MinIO·API·워커
+.github/workflows  CI (pytest·ruff / vitest·tsc / tsc)
+```
+
+## 빠른 시작
+
+```bash
+# 1) 서버 (SQLite, 외부 의존 없음)
+cd apps/api && uv venv .venv && uv pip install -p .venv/bin/python -e ".[dev]"
+.venv/bin/alembic upgrade head && .venv/bin/python -m app.kb.loader
+.venv/bin/uvicorn app.main:app --reload        # http://localhost:8000/docs
+
+# 2) 도메인 패키지 테스트
+cd packages/domain && npm install && npm test
+
+# 3) 앱 (Expo dev build — Expo Go 불가, VisionCamera 네이티브 모듈)
+cd apps/mobile && npm install && npx expo prebuild && npx expo run:android   # 또는 run:ios
+```
+
+각 디렉터리의 README 에 상세 안내가 있습니다: [apps/api/README.md](apps/api/README.md), [apps/mobile/README.md](apps/mobile/README.md).
+
+## 문서 읽는 순서
+
+| # | 문서 | 내용 | 누가 읽나 |
+|---|---|---|---|
+| 0 | [docs/00-naming-and-vision.md](docs/00-naming-and-vision.md) | 앱 이름 후보와 선정 근거, 포지셔닝, 타깃 사용자 | 모두 |
+| 1 | [docs/01-research.md](docs/01-research.md) | 경쟁앱 비교, 공공데이터 소스, 법규 요약, 불확실성 | 기획·개발 |
+| 2 | [docs/02-product-spec.md](docs/02-product-spec.md) | 기능 목록(MVP/P1/P2), 화면 흐름, 결과 카드, 회원/비회원, 개인화 | 기획 |
+| 3 | [docs/03-architecture.md](docs/03-architecture.md) | 시스템 구성, 스캔 파이프라인, 레이턴시 예산, 배포 | 개발 |
+| 4 | [docs/04-data-model.md](docs/04-data-model.md) | DB 스키마(ERD), 원산지 모델, 알레르겐 온톨로지 | 개발 |
+| 5 | [docs/05-knowledge-base.md](docs/05-knowledge-base.md) | 성분 등급 방법론, 대체당·첨가물 근거표, 알레르기·카페인·영양 규칙 | 기획·개발·도메인 |
+| 6 | [docs/06-api-and-ml.md](docs/06-api-and-ml.md) | API 엔드포인트, OCR 파싱, 임베딩 모델·파인튜닝 계획 | 개발 |
+| 7 | [docs/07-roadmap.md](docs/07-roadmap.md) | 마일스톤 M0~M4, 완료 기준, 리스크 레지스터 | 모두 |
+| 8 | [docs/08-legal-privacy.md](docs/08-legal-privacy.md) | 원산지 법 구분, 표시광고법·명예훼손 방어, 데이터 라이선스, 개인정보 | 기획·법무 |
+| ADR | [docs/adr/](docs/adr/) | 주요 기술 결정 기록(프레임워크, 벡터DB, 인증, 등급 방법론, 원산지 모델) | 개발 |
+
+## 한눈에 보는 결정
+
+- **앱 이름**: 어디산 (영문 Eodisan). "어디 산(産)이야?"라는 핵심 질문을 그대로 이름으로.
+- **앱**: Expo(React Native, New Architecture) + react-native-vision-camera v5. iOS/Android 단일 코드베이스.
+- **서버**: FastAPI + PostgreSQL(pgvector) + Redis + 워커, Docker Compose.
+- **인식 전략**: 바코드 우선 → 온디바이스 텍스트/임베딩 → 서버 벡터 검색의 3단 하이브리드. 목표 p50 지연 바코드 100ms 이내, 비전 400ms 이내.
+- **등급 철학**: 화해·Yuka와 달리 "위험 등급"과 "근거 수준"을 분리해 저장·표시. 규제기관 결론을 1순위 근거로.
+- **원산지 표시 철학**: 원산지·제조국·책임판매업자·원재료 원산지를 구분해 보여주고, 표시 의무가 없는 원료는 "알 수 없음"으로 둔다(중국산 아님으로 추정하지 않음).
+
+## 용어 한 줄 사전
+
+문서 곳곳에서 쓰는 용어를 먼저 풀어둡니다.
+
+- **SKU**: 개별 상품 한 종류(같은 라면이라도 봉지/컵은 다른 SKU).
+- **바코드(EAN-13)**: 상품 뒷면 13자리 숫자. 한국 상품은 `880`으로 시작.
+- **OCR**: 사진 속 글자를 텍스트로 바꾸는 기술.
+- **임베딩(embedding)**: 이미지를 숫자 벡터(예: 512개 숫자)로 요약한 것. 비슷한 이미지는 비슷한 벡터가 된다.
+- **벡터 검색(ANN)**: 수백만 개 벡터 중 가장 비슷한 것을 빠르게 찾는 기술. pgvector, FAISS 등.
+- **온디바이스(on-device)**: 서버에 보내지 않고 휴대폰 안에서 계산하는 것. 빠르고 개인정보에 유리.
+- **ADI**: 1일 섭취 허용량. 평생 매일 먹어도 안전하다고 규제기관이 정한 양(mg/kg 체중).

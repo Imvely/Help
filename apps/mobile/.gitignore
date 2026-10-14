@@ -1,0 +1,38 @@
+# 의존성
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# 네이티브 프로젝트 (prebuild 산출물 — 필요 시 커밋 전략 변경)
+ios/
+android/
+
+# 빌드 산출물
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+*.ipa
+*.apk
+*.aab
+
+# Metro
+.metro-health-check*
+
+# 디버그
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# 로컬 env
+.env*.local

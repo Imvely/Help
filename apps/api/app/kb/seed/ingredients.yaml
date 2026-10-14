@@ -1,0 +1,316 @@
+# 성분 지식 베이스 시드 (docs/05 §2 기준표, §3 근거표). 등급 변경은 PR + 출처 URL 필수.
+# grade: 0 안전 / 1 주의(조건부) / 2 논쟁적 / 3 유해
+# evidence: regulatory | systematic | observational | animal_cell
+# groups: child, pku, kidney, pregnancy, pet, cardio
+ingredients:
+  # ── 대체당/감미료 ──
+  - name_ko: 아스파탐
+    name_en: Aspartame
+    e_number: E951
+    functions: [감미료]
+    synonyms: [아스파탐(합성감미료), 아스파탐(감미료)]
+    hazard:
+      grade: 2
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: [pku]
+      summary: "2023년 IARC가 '발암 가능(2B)'으로 분류했지만 인체 근거는 제한적이고, JECFA는 1일 허용량(40mg/kg) 안에서는 안전하다고 봅니다. 페닐케톤뇨증(PKU) 환자는 피해야 합니다."
+      sources: ["https://www.who.int/news/item/14-07-2023-aspartame-hazard-and-risk-assessment-results-released"]
+      reviewed: 2026-10-01
+  - name_ko: 수크랄로스
+    name_en: Sucralose
+    e_number: E955
+    functions: [감미료]
+    synonyms: []
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "설탕의 약 600배 단맛. 1일 허용량 15mg/kg 안에서 안전하다는 것이 규제기관 결론입니다. 장내 미생물 관련 연구는 아직 동물·세포 수준입니다."
+      sources: ["https://efsa.europa.eu/en/topics/topic/sweeteners"]
+      reviewed: 2026-10-01
+  - name_ko: 아세설팜칼륨
+    name_en: Acesulfame potassium
+    e_number: E950
+    functions: [감미료]
+    synonyms: [아세설팜K, 아세설팜칼륨(합성감미료)]
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "EFSA가 2025년 재평가에서 1일 허용량을 15mg/kg으로 올렸고 유전독성 우려가 없다고 결론냈습니다."
+      sources: ["https://www.efsa.europa.eu/en/node/19722"]
+      reviewed: 2026-10-01
+  - name_ko: 사카린나트륨
+    name_en: Sodium saccharin
+    e_number: E954
+    functions: [감미료]
+    synonyms: [사카린]
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "과거 방광암 우려는 쥐에게만 나타나는 기전으로 밝혀져 기각됐습니다. 1일 허용량 안에서 안전합니다."
+      sources: ["https://efsa.europa.eu/en/topics/topic/sweeteners"]
+      reviewed: 2026-10-01
+  - name_ko: 스테비올배당체
+    name_en: Steviol glycosides
+    e_number: E960
+    functions: [감미료]
+    synonyms: [스테비아, 효소처리스테비아, 레바우디오사이드A]
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "스테비아 잎에서 뽑은 감미료. 1일 허용량 4mg/kg(스테비올 기준) 안에서 안전합니다."
+      sources: ["https://www.efsa.europa.eu/sl/press/news/ans100414"]
+      reviewed: 2026-10-01
+  - name_ko: 에리스리톨
+    name_en: Erythritol
+    e_number: E968
+    functions: [감미료]
+    synonyms: [에리스리톨(감미료)]
+    hazard:
+      grade: 2
+      evidence: observational
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: [cardio]
+      summary: "2023년 대규모 관찰연구에서 혈중 농도가 높은 사람의 심혈관 사건 위험이 높게 나왔습니다. 원인인지는 아직 확정되지 않았고 장기 임상시험이 없습니다. 심혈관 질환이 있다면 주의하세요."
+      sources: ["https://www.nih.gov/news-events/nih-research-matters/erythritol-cardiovascular-events"]
+      reviewed: 2026-10-01
+  - name_ko: 알룰로스
+    name_en: Allulose
+    functions: [감미료]
+    synonyms: [알룰로오스, 사이코스]
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 미허용, US: GRAS}
+      groups: []
+      summary: "설탕과 비슷한 맛에 열량이 거의 없는 희소당. 미국 FDA GRAS, 한국 허용. 장기 안전성 데이터는 다른 감미료보다 적습니다."
+      sources: ["https://www.fda.gov/food/food-additives-petitions/gras-notice-inventory"]
+      reviewed: 2026-10-01
+  - name_ko: 말티톨
+    name_en: Maltitol
+    e_number: E965
+    functions: [감미료]
+    synonyms: [말티톨시럽]
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "당알코올. 안전하지만 한 번에 많이 먹으면 설사를 일으킬 수 있습니다(EU는 10% 이상 함유 시 표시 의무)."
+      sources: ["https://efsa.europa.eu/en/topics/topic/sweeteners"]
+      reviewed: 2026-10-01
+  - name_ko: 자일리톨
+    name_en: Xylitol
+    e_number: E967
+    functions: [감미료]
+    synonyms: []
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: [pet]
+      summary: "사람에게는 안전하지만 과량 시 설사. 반려견에게는 소량으로도 치명적이니 절대 주지 마세요."
+      sources: ["https://www.fda.gov/animal-veterinary/animal-health-literacy/paws-xylitol-its-dangerous-dogs"]
+      reviewed: 2026-10-01
+  # ── 보존료·발색제·산화방지제 ──
+  - name_ko: 아질산나트륨
+    name_en: Sodium nitrite
+    e_number: E250
+    functions: [발색제, 보존료]
+    synonyms: [아질산나트륨(발색제)]
+    hazard:
+      grade: 2
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용(2023 허용량 하향), US: 허용}
+      groups: [child]
+      summary: "햄·소시지의 색과 보존을 위해 씁니다. 몸 안에서 니트로사민이 생길 수 있어 EU는 2023년 허용량을 낮췄고, 가공육을 많이 먹는 사람은 우려가 있습니다. 가공육 자체는 IARC 1군입니다."
+      sources: ["https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7009987/"]
+      reviewed: 2026-10-01
+  - name_ko: 소브산칼륨
+    name_en: Potassium sorbate
+    e_number: E202
+    functions: [보존료]
+    synonyms: [소르빈산칼륨, 소브산]
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "곰팡이·효모를 막는 보존료. 1일 허용량 안에서 안전합니다."
+      sources: ["https://food.ec.europa.eu/food-safety/food-improvement-agents/additives/re-evaluation_en"]
+      reviewed: 2026-10-01
+  - name_ko: 안식향산나트륨
+    name_en: Sodium benzoate
+    e_number: E211
+    functions: [보존료]
+    synonyms: [안식향산]
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "음료 보존료. 비타민C와 만나면 아주 적은 벤젠이 생길 수 있어 음료 제조 시 관리됩니다. 허용량 안에서 안전합니다."
+      sources: ["https://food.ec.europa.eu/food-safety/food-improvement-agents/additives/re-evaluation_en"]
+      reviewed: 2026-10-01
+  - name_ko: 이산화티타늄
+    name_en: Titanium dioxide
+    e_number: E171
+    functions: [착색료]
+    synonyms: [산화티타늄, 이산화티탄]
+    hazard:
+      grade: 2
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: "금지(2022)", US: 허용}
+      groups: []
+      summary: "하얀색을 내는 색소. EU는 2021년 '유전독성을 배제할 수 없다'며 2022년 식품 사용을 금지했지만 한국·미국은 허용합니다. 규제기관 사이에 결론이 다릅니다."
+      sources: ["https://food.ec.europa.eu/food-safety/food-improvement-agents/additives/re-evaluation_en"]
+      reviewed: 2026-10-01
+  - name_ko: 황색4호
+    name_en: Tartrazine
+    e_number: E102
+    functions: [착색료]
+    synonyms: [식용색소황색제4호, 타르트라진]
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: "허용(어린이 경고문 의무)", US: 허용}
+      groups: [child]
+      summary: "타르색소. EU는 '어린이의 활동과 주의력에 나쁜 영향을 줄 수 있다'는 경고문을 의무화했습니다. 한국은 어린이 기호식품 품질인증 시 사용을 제한합니다."
+      sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/1331"]
+      reviewed: 2026-10-01
+  - name_ko: 황색5호
+    name_en: Sunset Yellow FCF
+    e_number: E110
+    functions: [착색료]
+    synonyms: [식용색소황색제5호]
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: "허용(어린이 경고문 의무)", US: 허용}
+      groups: [child]
+      summary: "타르색소. EU 어린이 경고문 대상 6종 중 하나입니다."
+      sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/1330"]
+      reviewed: 2026-10-01
+  - name_ko: 적색40호
+    name_en: Allura Red AC
+    e_number: E129
+    functions: [착색료]
+    synonyms: [식용색소적색제40호]
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: "허용(어린이 경고문 의무)", US: 허용}
+      groups: [child]
+      summary: "타르색소. EU 어린이 경고문 대상입니다."
+      sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/1327"]
+      reviewed: 2026-10-01
+  - name_ko: 적색3호
+    name_en: Erythrosine
+    e_number: E127
+    functions: [착색료]
+    synonyms: [식용색소적색제3호, 에리트로신]
+    hazard:
+      grade: 2
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 제한적 허용, US: "금지(2025, 2027 시행)"}
+      groups: [child]
+      summary: "미국 FDA가 2025년 식품 사용 금지를 결정(쥐 갑상선 종양, 델라니 조항). 사람에게 같은 기전이 적용되는지는 불확실합니다."
+      sources: ["https://www.fda.gov/food/hfp-constituent-updates/fda-revoke-authorization-use-red-no-3-food-and-ingested-drugs"]
+      reviewed: 2026-10-01
+  # ── 향미증진제·안정제 ──
+  - name_ko: L-글루탐산나트륨
+    name_en: Monosodium glutamate
+    e_number: E621
+    functions: [향미증진제]
+    synonyms: [MSG, 글루탐산나트륨, 엘글루탐산나트륨, 향미증진제]
+    hazard:
+      grade: 0
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: GRAS}
+      groups: []
+      summary: "감칠맛 조미료. '차이나 레스토랑 증후군'은 과학적 근거가 없습니다. EFSA는 2017년 그룹 허용량(30mg/kg)을 정했습니다."
+      sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/4910"]
+      reviewed: 2026-10-01
+  - name_ko: 카라기난
+    name_en: Carrageenan
+    e_number: E407
+    functions: [증점제, 안정제]
+    synonyms: [카라기난(증점제)]
+    hazard:
+      grade: 2
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용(잠정), US: 허용}
+      groups: []
+      summary: "해조류에서 뽑은 점성제. EFSA는 2018년 데이터 부족으로 '잠정' 허용량만 정했고 후속 평가 중입니다. 분해된 카라기난은 식품용과 다른 물질입니다."
+      sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/5238"]
+      reviewed: 2026-10-01
+  - name_ko: 인산염
+    name_en: Phosphates
+    functions: [산도조절제, 안정제]
+    synonyms: [제일인산나트륨, 제이인산나트륨, 제삼인산나트륨, 피로인산나트륨, 폴리인산나트륨, 메타인산나트륨, 인산나트륨, 인산칼륨, 산도조절제]
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: [kidney]
+      summary: "가공식품에 널리 쓰이는 첨가물. 일반인은 허용량 안에서 안전하지만, 신장 기능이 떨어진 분은 인 섭취를 제한해야 합니다. 한국 라벨에는 인 함량이 없어 첨가물 이름으로만 알 수 있습니다."
+      sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/5674"]
+      reviewed: 2026-10-01
+  # ── 지방 ──
+  - name_ko: 부분경화유
+    name_en: Partially hydrogenated oil
+    functions: []
+    synonyms: [경화유, 쇼트닝, 마가린, 식물성경화유, 경화대두유, 경화팜유]
+    hazard:
+      grade: 3
+      evidence: systematic
+      regulatory_status: {KR: 허용, EU: 제한, US: "금지(PHO)"}
+      groups: []
+      summary: "트랜스지방의 주요 원천. 심혈관 질환과의 인과관계가 확립돼 WHO가 퇴출을 권고합니다. 한국은 1회 제공량당 0.2g 미만이면 '0'으로 표시할 수 있어 원재료명으로 확인하세요."
+      sources: ["https://www.who.int/news-room/fact-sheets/detail/trans-fat"]
+      reviewed: 2026-10-01
+  - name_ko: 팜유
+    name_en: Palm oil
+    functions: []
+    synonyms: [팜올레인유, 팜핵유, 정제팜유]
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: []
+      summary: "포화지방이 많고 정제 과정에서 3-MCPD 같은 오염물질이 생길 수 있습니다. 첨가물 위해라기보다 영양(포화지방) 문제입니다."
+      sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/4426"]
+      reviewed: 2026-10-01
+  # ── 카페인 ──
+  - name_ko: 카페인
+    name_en: Caffeine
+    functions: []
+    synonyms: [무수카페인, 카페인무수물]
+    hazard:
+      grade: 1
+      evidence: regulatory
+      regulatory_status: {KR: 허용, EU: 허용, US: 허용}
+      groups: [child, pregnancy]
+      summary: "성인 1일 400mg, 임산부 300mg, 어린이·청소년 체중 1kg당 2.5mg이 한국 권고 상한입니다. 0.15mg/mL 이상 음료는 '고카페인' 표시 의무."
+      sources: ["https://www.mfds.go.kr/brd/m_629/view.do?seq=28"]
+      reviewed: 2026-10-01
+  # ── 일반 안전 성분(등급 0, 요약 간단) ──
+  - {name_ko: 구연산, name_en: Citric acid, e_number: E330, functions: [산도조절제], synonyms: [구연산(산도조절제)], hazard: {grade: 0, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "과일에도 있는 산. 안전합니다.", sources: ["https://food.ec.europa.eu/food-safety/food-improvement-agents/additives/re-evaluation_en"], reviewed: 2026-10-01}}
+  - {name_ko: 비타민C, name_en: Ascorbic acid, e_number: E300, functions: [산화방지제, 영양강화제], synonyms: [아스코르빈산, L-아스코르빈산, 아스코르브산], hazard: {grade: 0, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "비타민C. 산화 방지용으로도 씁니다. 안전합니다.", sources: ["https://food.ec.europa.eu/food-safety/food-improvement-agents/additives/re-evaluation_en"], reviewed: 2026-10-01}}
+  - {name_ko: 정제소금, name_en: Salt, functions: [], synonyms: [소금, 천일염, 식염, 정제염], hazard: {grade: 0, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "소금 자체는 안전하지만 나트륨 섭취량은 영양 정보에서 확인하세요.", sources: ["https://www.who.int/news-room/fact-sheets/detail/salt-reduction"], reviewed: 2026-10-01}}
+  - {name_ko: 설탕, name_en: Sugar, functions: [], synonyms: [백설탕, 정백당, 갈색설탕, 황설탕, 원당], hazard: {grade: 0, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: []  , summary: "첨가물이 아닌 식품. 당류 섭취량은 영양 정보에서 확인하세요(1일 기준 100g).", sources: ["https://www.who.int/publications/i/item/9789241549028"], reviewed: 2026-10-01}}
+  - {name_ko: 레시틴, name_en: Lecithin, e_number: E322, functions: [유화제], synonyms: [대두레시틴, 해바라기레시틴, 유화제], hazard: {grade: 0, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "콩·해바라기에서 얻는 유화제. 안전합니다. 대두레시틴은 대두 알레르기 표시 대상입니다.", sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/4742"], reviewed: 2026-10-01}}
+  - {name_ko: 잔탄검, name_en: Xanthan gum, e_number: E415, functions: [증점제], synonyms: [잔탄검(증점제)], hazard: {grade: 0, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "미생물 발효로 만드는 점성제. 안전합니다.", sources: ["https://www.efsa.europa.eu/en/efsajournal/pub/4909"], reviewed: 2026-10-01}}
+  - {name_ko: 합성착향료, name_en: Artificial flavor, functions: [착향료], synonyms: [착향료, 향료, 천연착향료, 합성향료], hazard: {grade: 0, evidence: regulatory, regulatory_status: {KR: 허용, EU: 허용, US: 허용}, groups: [], summary: "향을 내는 성분의 묶음 이름. 개별 성분은 표시 의무가 없어 알 수 없습니다. 향료 알레르기가 있다면 주의하세요.", sources: ["https://www.foodsafetykorea.go.kr/"], reviewed: 2026-10-01}}
+  # ── 화장품(임신 주의) ──
+  - {name_ko: 레티놀, name_en: Retinol, inci_name: RETINOL, functions: [주름개선], synonyms: [레티닐팔미테이트, 레티날, 레티노이드], hazard: {grade: 1, evidence: regulatory, regulatory_status: {KR: 허용, EU: "허용(2027 농도 제한)", US: 허용}, groups: [pregnancy], summary: "비타민A 유도체. 피부 전문가들은 임신 중 사용을 피하라고 권고합니다(전문가 권고, 식약처 공식 금지는 아님).", sources: ["https://ec.europa.eu/growth/tools-databases/cosing/"], reviewed: 2026-10-01}}
+  - {name_ko: 살리실릭애씨드, name_en: Salicylic acid, inci_name: SALICYLIC ACID, functions: [각질제거, 보존제], synonyms: [살리실산, BHA], hazard: {grade: 1, evidence: regulatory, regulatory_status: {KR: "배합한도", EU: "배합한도", US: 허용}, groups: [pregnancy, child], summary: "각질 제거 성분. 식약처 배합한도가 있고, 임신 중 고농도 사용은 전문가들이 주의를 권합니다. 3세 이하 어린이용 제품에는 제한됩니다.", sources: ["https://www.law.go.kr/"], reviewed: 2026-10-01}}
+  - {name_ko: 하이드로퀴논, name_en: Hydroquinone, inci_name: HYDROQUINONE, functions: [미백], synonyms: [히드로퀴논], hazard: {grade: 3, evidence: regulatory, regulatory_status: {KR: "배합금지(일반화장품)", EU: 배합금지, US: 처방}, groups: [pregnancy], summary: "강한 미백 성분. 한국·EU에서 일반 화장품 배합 금지입니다. 해외 직구 제품에서 발견되면 사용을 피하세요.", sources: ["https://www.law.go.kr/"], reviewed: 2026-10-01}}
