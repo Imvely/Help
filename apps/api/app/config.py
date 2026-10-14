@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     #  - supabase_jwt_secret: 레거시 HS256 "JWT Secret" (대시보드 JWT Keys 탭의 Legacy)
     supabase_url: str | None = None
     supabase_jwt_secret: str | None = None
+    # 목업 로그인(개발 전용): POST /auth/mock/token 으로 HS256 토큰을 발급해 회원 기능을 테스트한다.
+    # 운영에서는 반드시 0. 소셜 로그인 연동 전까지만 쓴다.
+    auth_mock: bool = False
+    auth_mock_secret: str = "eodisan-dev-mock-secret-change-me"
     # 프로필 암호화 키 (Fernet, base64 32바이트). 비우면 프로필 동기화 503
     profile_encryption_key: str | None = None
 

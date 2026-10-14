@@ -9,9 +9,9 @@
  */
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
-import { useAuth } from '@/data/auth';
+import { mockAuthAvailable, useAuth } from '@/data/auth';
 import { useProfile } from '@/data/profile';
 import { disableRecallPush, enableRecallPush } from '@/data/push';
 import { useSettings } from '@/data/settings';
@@ -123,6 +123,7 @@ export default function ProfileScreen() {
 function AccountSection() {
   const auth = useAuth();
   const [busy, setBusy] = useState(false);
+  const [mockName, setMockName] = useState('');
 
   if (!auth.available) {
     return (
@@ -147,7 +148,7 @@ function AccountSection() {
     return (
       <Section title="계정">
         <Text style={styles.value}>{label}</Text>
-        <Text style={styles.hint}>{provider ? `${provider} 로그인` : '로그인됨'} · 히스토리는 기기 간에 동기화됩니다</Text>
+        <Text style={styles.hint}>{auth.isMock ? '목업 로그인(개발용)' : provider ? `${provider} 로그인` : '로그인됨'} · 히스토리는 기기 간에 동기화됩니다</Text>
         <Pressable onPress={() => run(auth.signOut)} style={styles.resetBtn} disabled={busy}>
           <Text style={styles.resetText}>로그아웃</Text>
         </Pressable>
@@ -159,6 +160,26 @@ function AccountSection() {
     <Section title="계정">
       <Text style={styles.hint}>로그인하면 스캔 기록이 무제한 저장되고 기기 간에 동기화돼요. 로그인 없이도 모든 기능을 쓸 수 있어요.</Text>
       {auth.status === 'loading' ? <ActivityIndicator style={{ marginVertical: spacing.sm }} /> : null}
+      {mockAuthAvailable ? (
+        // 개발 전용: 소셜 로그인 연동 전까지 서버의 목업 토큰으로 회원 기능을 테스트한다 (EXPO_PUBLIC_AUTH_MOCK=1)
+        <View style={styles.mockBox}>
+          <Text style={styles.hint}>개발용 목업 로그인 — 이름만 입력하면 됩니다(같은 이름 = 같은 계정)</Text>
+          <TextInput
+            value={mockName}
+            onChangeText={setMockName}
+            placeholder="이름 (예: 다영)"
+            style={styles.mockInput}
+            autoCapitalize="none"
+          />
+          <Pressable
+            onPress={() => run(() => auth.signInMock(mockName.trim() || '테스터'))}
+            disabled={busy}
+            style={[styles.loginBtn, styles.mockBtn]}
+          >
+            <Text style={[styles.loginText, { color: '#fff' }]}>목업 로그인</Text>
+          </Pressable>
+        </View>
+      ) : null}
       <View style={styles.loginButtons}>
         <Pressable onPress={() => run(() => auth.signInWithOAuth('kakao'))} disabled={busy} style={[styles.loginBtn, styles.kakao]}>
           <Text style={[styles.loginText, { color: '#191919' }]}>카카오로 계속하기</Text>
@@ -297,6 +318,9 @@ const styles = StyleSheet.create({
   resetBtn: { paddingVertical: 10 },
   resetText: { color: colors.danger, fontWeight: '600' },
   loginButtons: { gap: spacing.sm, marginTop: spacing.sm },
+  mockBox: { gap: spacing.sm, marginTop: spacing.sm, padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border },
+  mockInput: { height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, color: colors.text },
+  mockBtn: { backgroundColor: '#6B7280' },
   loginBtn: { height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   kakao: { backgroundColor: '#FEE500' },
   google: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border },

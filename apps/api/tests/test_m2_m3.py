@@ -179,3 +179,23 @@ def test_jwks_es256_token_verified(client, monkeypatch, kimchi):
     bad = jwt.encode({"sub": "x", "aud": "authenticated", "exp": int(time.time()) + 600}, other,
                      algorithm="ES256", headers={"kid": "k1"})
     assert client.get("/v1/me/scans", headers={"Authorization": f"Bearer {bad}"}).status_code == 401
+
+
+def test_mock_login_flow(client, monkeypatch, kimchi):
+    """목업 로그인: 토큰 발급 → 회원 전용 API 사용. 같은 이름은 같은 계정."""
+    from app.config import get_settings
+
+    assert client.post("/v1/auth/mock/token", json={"name": "다영"}).status_code == 404  # 꺼져 있으면 숨김
+    monkeypatch.setattr(get_settings(), "auth_mock", True)
+    monkeypatch.setattr(get_settings(), "supabase_jwt_secret", None)  # 목업 비밀로 검증되는지
+    t1 = client.post("/v1/auth/mock/token", json={"name": "다영"}).json()
+    t2 = client.post("/v1/auth/mock/token", json={"name": "다영"}).json()
+    assert t1["user"]["id"] == t2["user"]["id"] and t1["user"]["email"] == "다영@mock.local"
+    h = {"Authorization": f"Bearer {t1['access_token']}"}
+    r = client.put("/v1/me/profiles", headers=h,
+                   json={"label": "나", "payload": '{"allergens":["egg"]}', "sync_consent": True})
+    assert r.status_code == 200
+    assert client.get("/v1/me/profiles", headers=h).json()[0]["payload"] == '{"allergens":["egg"]}'
+    r = client.post("/v1/me/scans", headers=h, json={"scans": [
+        {"client_id": "m1", "ean13": "8801234567890", "method": "barcode", "created_at": "2026-10-14T02:00:00Z"}]})
+    assert r.json()["added"] == 1

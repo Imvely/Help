@@ -12,7 +12,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.routers import contributions, devices, kb, me, ocr, products, recalls, recognize, scans
+from app.routers import (
+    auth_mock,
+    contributions,
+    devices,
+    kb,
+    me,
+    ocr,
+    products,
+    recalls,
+    recognize,
+    scans,
+)
 
 settings = get_settings()
 
@@ -27,7 +38,8 @@ app.add_middleware(
 
 API_PREFIX = "/v1"
 for r in (products.router, recalls.router, kb.router, contributions.router,
-          recognize.router, ocr.router, me.router, devices.router, scans.router):
+          recognize.router, ocr.router, me.router, devices.router, scans.router,
+          auth_mock.router):
     app.include_router(r, prefix=API_PREFIX)
 
 

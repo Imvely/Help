@@ -44,11 +44,16 @@ def _jwks_client() -> jwt.PyJWKClient | None:
 
 def auth_configured() -> bool:
     s = get_settings()
-    return bool(s.supabase_jwt_secret or s.supabase_url)
+    return bool(s.supabase_jwt_secret or s.supabase_url or s.auth_mock)
+
+
+def hs256_secret() -> str | None:
+    """HS256 검증 키: 레거시 Supabase JWT Secret, 없으면(목업 모드) 개발용 비밀."""
+    s = get_settings()
+    return s.supabase_jwt_secret or (s.auth_mock_secret if s.auth_mock else None)
 
 
 def _decode(token: str) -> dict:
-    s = get_settings()
     if not auth_configured():
         raise HTTPException(503, "로그인은 아직 설정되지 않았습니다 (EODISAN_SUPABASE_URL 또는 "
                                  "EODISAN_SUPABASE_JWT_SECRET)")
@@ -56,9 +61,9 @@ def _decode(token: str) -> dict:
         header = jwt.get_unverified_header(token)
         alg = header.get("alg", "HS256")
         if alg == "HS256":
-            if not s.supabase_jwt_secret:
+            key = hs256_secret()
+            if not key:
                 raise HTTPException(401, "HS256 토큰이지만 서버에 JWT Secret 이 없습니다")
-            key = s.supabase_jwt_secret
         else:
             client = _jwks_client()
             if client is None:

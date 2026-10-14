@@ -26,6 +26,15 @@ const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 /** 서버 설정이 있어야 true. false 면 프로필 화면에 "로그인은 준비 중입니다(서버 설정 필요)" 를 띄웁니다. */
 export const authAvailable = SUPABASE_URL.length > 0 && SUPABASE_ANON_KEY.length > 0;
 
+/**
+ * 목업 로그인(개발 전용). `EXPO_PUBLIC_AUTH_MOCK=1` 이면 프로필 화면에 "목업 로그인" 이 생기고,
+ * 우리 API 의 `POST /auth/mock/token` 이 발급한 JWT 로 회원 기능(동기화·푸시)을 그대로 테스트합니다.
+ * 소셜 로그인 연동이 끝나면 env 에서 끄면 됩니다. 서버도 EODISAN_AUTH_MOCK=1 이어야 합니다.
+ */
+export const mockAuthAvailable = process.env.EXPO_PUBLIC_AUTH_MOCK === '1';
+const MOCK_SESSION_KEY = 'eodisan.mock_session';
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000/v1';
+
 export type OAuthProvider = 'kakao' | 'google';
 
 // ---------------------------------------------------------------------------
@@ -122,7 +131,23 @@ interface AuthState {
   signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
   /** iOS 전용 Sign in with Apple (ID 토큰 방식) */
   signInWithApple: () => Promise<void>;
+  /** 개발 전용 목업 로그인 (mockAuthAvailable 일 때만 동작) */
+  signInMock: (name: string) => Promise<void>;
+  /** 목업 세션인지 (Supabase 세션이 아님) */
+  isMock: boolean;
   signOut: () => Promise<void>;
+}
+
+/** 목업 토큰을 스토어 상태로 바꿉니다. Supabase 의 Session 객체는 없으므로 user/accessToken 만 채웁니다. */
+function deriveFromMock(token: string, user: { id: string; email: string }): Pick<AuthState, 'session' | 'user' | 'accessToken' | 'isAnonymous' | 'isMember' | 'isMock'> {
+  return {
+    session: null,
+    user: { id: user.id, email: user.email, is_anonymous: false, app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } as User,
+    accessToken: token,
+    isAnonymous: false,
+    isMember: true,
+    isMock: true,
+  };
 }
 
 function deriveFromSession(session: Session | null): Pick<AuthState, 'session' | 'user' | 'accessToken' | 'isAnonymous' | 'isMember'> {
@@ -156,13 +181,49 @@ function parseAuthCallback(url: string): { code?: string; accessToken?: string; 
 const PROVIDER_LABELS: Record<OAuthProvider, string> = { kakao: '카카오', google: 'Google' };
 
 export const useAuth = create<AuthState>((set, get) => ({
-  available: authAvailable,
+  available: authAvailable || mockAuthAvailable,
   status: 'idle',
   ...deriveFromSession(null),
+  isMock: false,
   error: null,
 
+  signInMock: async (name) => {
+    if (!mockAuthAvailable) return;
+    set({ error: null });
+    try {
+      const res = await fetch(`${API_BASE}/auth/mock/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error(`목업 로그인 실패 (${res.status}) — 서버 EODISAN_AUTH_MOCK=1 인지 확인`);
+      const data = (await res.json()) as { access_token: string; user: { id: string; email: string } };
+      await Storage.setItemAsync(MOCK_SESSION_KEY, JSON.stringify(data));
+      set({ ...deriveFromMock(data.access_token, data.user), status: 'ready' });
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : String(e) });
+    }
+  },
+
   init: async () => {
-    if (!supabase || get().status !== 'idle') return;
+    if (get().status !== 'idle') return;
+    // 목업 세션이 저장돼 있으면 먼저 복원 (Supabase 설정이 없어도 동작)
+    if (mockAuthAvailable) {
+      const raw = await Storage.getItemAsync(MOCK_SESSION_KEY);
+      if (raw) {
+        try {
+          const data = JSON.parse(raw) as { access_token: string; user: { id: string; email: string } };
+          set({ ...deriveFromMock(data.access_token, data.user), status: 'ready' });
+          return;
+        } catch {
+          await Storage.removeItemAsync(MOCK_SESSION_KEY);
+        }
+      }
+    }
+    if (!supabase) {
+      set({ status: 'ready' });
+      return;
+    }
     set({ status: 'loading' });
     try {
       const { data } = await supabase.auth.getSession();
@@ -237,6 +298,11 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
+    if (get().isMock) {
+      await Storage.removeItemAsync(MOCK_SESSION_KEY);
+      set({ ...deriveFromSession(null), isMock: false, error: null });
+      if (!supabase) return;
+    }
     if (!supabase) return;
     await supabase.auth.signOut();
     // 로그아웃 후에도 비회원 기능은 계속 써야 하므로 다시 익명 세션을 만듭니다.
