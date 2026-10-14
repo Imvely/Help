@@ -53,7 +53,7 @@ POST /v1/contributions/label   앱이 확인·수정한 결과 → 제품 저장
 
 ## 로그인·프로필·푸시 (M3)
 
-- 인증: Supabase JWT(HS256)를 `Authorization: Bearer` 로. `/me/*` 는 회원 전용, 나머지는 비회원 허용.
+- 인증: Supabase JWT 를 `Authorization: Bearer` 로. `EODISAN_SUPABASE_URL` 만 설정하면 공개 JWKS 로 비대칭(ES256/RS256) 토큰을 검증하고, 레거시 HS256 프로젝트는 `EODISAN_SUPABASE_JWT_SECRET` 을 쓴다. `/me/*` 는 회원 전용, 나머지는 비회원 허용.
 - 비회원 식별: 앱이 `X-Anonymous-Id`(기기 UUID) 헤더를 보내면 `/scans`, `/devices` 가 그 ID 로 기록 → 회수 푸시 매칭.
 - 프로필: `PUT /me/profiles` 는 `sync_consent=true` 일 때만 **Fernet 암호화**해 저장. 서버는 내용을 해석하지 않는다.
 - 회수 푸시: `python -m app.pipeline.push` (스캔한 사용자·기기에 Expo Push 발송, 중복 방지).

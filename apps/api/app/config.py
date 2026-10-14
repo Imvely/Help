@@ -35,7 +35,10 @@ class Settings(BaseSettings):
     label_extraction_enabled: bool = True
     label_verify_threshold: int = 3  # 같은 라벨 제보가 n명 이상 일치하면 verified
 
-    # 인증: Supabase JWT (HS256). 비우면 /me/* 는 503
+    # 인증: Supabase JWT 검증. 둘 중 하나만 있으면 된다. 둘 다 비면 /me/* 는 503
+    #  - supabase_url: 프로젝트 URL. 공개 JWKS 로 ES256/RS256 검증 (권장, 새 프로젝트 기본)
+    #  - supabase_jwt_secret: 레거시 HS256 "JWT Secret" (대시보드 JWT Keys 탭의 Legacy)
+    supabase_url: str | None = None
     supabase_jwt_secret: str | None = None
     # 프로필 암호화 키 (Fernet, base64 32바이트). 비우면 프로필 동기화 503
     profile_encryption_key: str | None = None

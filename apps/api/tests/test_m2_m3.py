@@ -147,3 +147,35 @@ def test_anonymous_scan_and_device_then_recall_push(client, db, kimchi):
     # 두 번째 실행은 중복 발송하지 않는다
     assert notify_recalls(db, client=fake) == 0
     assert db.execute(select(m.RecallNotification)).scalars().one().ticket == "t1"
+
+
+def test_jwks_es256_token_verified(client, monkeypatch, kimchi):
+    """새 Supabase 프로젝트의 비대칭(ES256) 토큰: 공개 JWKS 로 검증되는지 (네트워크 없이 키 주입)."""
+    import time
+
+    import jwt
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    import app.auth as auth_mod
+    from app.config import get_settings
+
+    priv = ec.generate_private_key(ec.SECP256R1())
+    token = jwt.encode({"sub": "aaaaaaaa-0000-0000-0000-000000000001", "aud": "authenticated",
+                        "exp": int(time.time()) + 600}, priv, algorithm="ES256", headers={"kid": "k1"})
+
+    class FakeKey:
+        key = priv.public_key()
+
+    class FakeJwks:
+        def get_signing_key_from_jwt(self, _):
+            return FakeKey()
+
+    monkeypatch.setattr(auth_mod, "_jwks_client", lambda: FakeJwks())
+    monkeypatch.setattr(get_settings(), "supabase_url", "https://example.supabase.co")
+    r = client.get("/v1/me/scans", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200, r.text
+    # 잘못된 서명(다른 키) 은 401
+    other = ec.generate_private_key(ec.SECP256R1())
+    bad = jwt.encode({"sub": "x", "aud": "authenticated", "exp": int(time.time()) + 600}, other,
+                     algorithm="ES256", headers={"kid": "k1"})
+    assert client.get("/v1/me/scans", headers={"Authorization": f"Bearer {bad}"}).status_code == 401
