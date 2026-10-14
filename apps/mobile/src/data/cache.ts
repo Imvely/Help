@@ -2,7 +2,7 @@
  * 기기 로컬 SQLite 캐시 (docs/03-architecture.md §5).
  *
  * - `products` : 바코드 → 제품 응답(JSON 문자열) 캐시. TTL 7일, LRU 5,000건.
- * - `scans`    : 스캔 히스토리(비회원 50건 규칙은 UI 에서 limit 로 처리).
+ * - `scans`    : 스캔 히스토리(비회원 50건 규칙은 UI 에서 limit 로 처리). `synced` 열은 서버 업로드 여부(M11).
  *
  * expo-sqlite 는 Python 의 sqlite3 와 거의 같은 감각으로 쓸 수 있습니다.
  * 차이점: 모든 호출이 async 이고, `?` 플레이스홀더에 배열로 값을 넘깁니다.
@@ -41,10 +41,23 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
         );
         CREATE INDEX IF NOT EXISTS idx_scans_created_at ON scans(created_at);
       `);
+      await migrate(db);
       return db;
     })();
   }
   return dbPromise;
+}
+
+/**
+ * 스키마 마이그레이션. SQLite 는 `ADD COLUMN IF NOT EXISTS` 가 없어서
+ * PRAGMA table_info 로 컬럼 존재 여부를 확인한 뒤 추가합니다(Alembic 의 수동 버전과 같은 역할).
+ */
+async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
+  const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(scans)');
+  if (!cols.some((c) => c.name === 'synced')) {
+    // v2: 서버(/me/scans)에 올렸는지 표시. 기존 행은 0(미동기화)으로 시작합니다.
+    await db.execAsync('ALTER TABLE scans ADD COLUMN synced INTEGER NOT NULL DEFAULT 0');
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -144,9 +157,26 @@ export async function recordScan(scan: NewScan): Promise<void> {
 export async function listScans(limit = 50): Promise<ScanRecord[]> {
   const db = await getDb();
   return db.getAllAsync<ScanRecord>(
-    'SELECT id, ean13, product_id, name, method, created_at FROM scans ORDER BY created_at DESC LIMIT ?',
+    'SELECT id, ean13, product_id, name, method, created_at, synced FROM scans ORDER BY created_at DESC LIMIT ?',
     [limit],
   );
+}
+
+/** 서버에 아직 올리지 않은 기록(오래된 순). 동기화(src/data/sync.ts)가 배치로 올립니다. */
+export async function listUnsyncedScans(limit = 500): Promise<ScanRecord[]> {
+  const db = await getDb();
+  return db.getAllAsync<ScanRecord>(
+    'SELECT id, ean13, product_id, name, method, created_at, synced FROM scans WHERE synced = 0 ORDER BY created_at ASC LIMIT ?',
+    [limit],
+  );
+}
+
+/** 업로드에 성공한 행을 synced=1 로 표시 */
+export async function markScansSynced(ids: number[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await getDb();
+  const placeholders = ids.map(() => '?').join(',');
+  await db.runAsync(`UPDATE scans SET synced = 1 WHERE id IN (${placeholders})`, ids);
 }
 
 export async function clearScans(): Promise<void> {

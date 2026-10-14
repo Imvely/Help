@@ -1,26 +1,27 @@
 /**
  * 제품 상세 화면. 파일명 `[id].tsx` 는 동적 경로(/product/123)이며 `useLocalSearchParams` 로 id 를 받습니다.
- * 탭: 원산지 / 성분 / 영양 / 출처 (docs/02 §3). 상단에는 결과 카드와 같은 "⚠ 내 프로필" 요약을 둡니다.
+ * 탭: 원산지 / 성분 / 영양 / 대체 / 출처 (docs/02 §3, P1-2). 상단에는 결과 카드와 같은 "⚠ 내 프로필" 요약을 둡니다.
  */
 import { useQuery } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { getProduct } from '@/data/api';
+import { getAlternatives, getProduct } from '@/data/api';
 import { useProfile, profileHasSettings } from '@/data/profile';
-import type { Product } from '@/data/types';
+import type { Alternative, Product } from '@/data/types';
 import { allergenLabel, evaluateProduct, gradeSummary, originBadges } from '@/domain';
 import { GradeChip } from '@/ui/GradeChip';
-import { OriginBadge } from '@/ui/OriginBadge';
+import { OriginBadge, ingredientOriginShort } from '@/ui/OriginBadge';
 import { Section } from '@/ui/Section';
 import { colors, evidenceIcons, gradeColors, gradeKey, radius, spacing } from '@/ui/theme';
 
-type TabKey = 'origin' | 'ingredients' | 'nutrition' | 'sources';
+type TabKey = 'origin' | 'ingredients' | 'nutrition' | 'alternatives' | 'sources';
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'origin', label: '원산지' },
   { key: 'ingredients', label: '성분' },
   { key: 'nutrition', label: '영양' },
+  { key: 'alternatives', label: '대체' },
   { key: 'sources', label: '출처' },
 ];
 
@@ -113,9 +114,14 @@ export default function ProductDetailScreen() {
         ))}
       </View>
 
-      {tab === 'origin' ? <OriginTab data={data} /> : null}
+      {tab === 'origin' ? (
+        <OriginTab data={data} onRegisterLabel={() => router.push(`/ocr?product_id=${encodeURIComponent(info.id)}`)} />
+      ) : null}
       {tab === 'ingredients' ? <IngredientsTab data={data} /> : null}
       {tab === 'nutrition' ? <NutritionTab data={data} /> : null}
+      {tab === 'alternatives' ? (
+        <AlternativesTab productId={info.id} onSelect={(id) => router.push(`/product/${encodeURIComponent(id)}`)} />
+      ) : null}
       {tab === 'sources' ? (
         <SourcesTab data={data} onCorrection={() => router.push(`/correction?productId=${encodeURIComponent(info.id)}`)} />
       ) : null}
@@ -123,10 +129,12 @@ export default function ProductDetailScreen() {
   );
 }
 
-function OriginTab({ data }: { data: Product }) {
-  const badges = originBadges(data.origin);
-  const top = badges.filter((b) => b.level !== 'ingredient');
+function OriginTab({ data, onRegisterLabel }: { data: Product; onRegisterLabel: () => void }) {
+  // 면책 문구는 아래에서 직접 그리므로 배지에서는 뺍니다.
+  const badges = originBadges(data.origin, { includeDisclaimer: false, category: data.product.category });
+  const top = badges.filter((b) => b.level === 'manufacturing' || b.level === 'brand_owner');
   const ing = badges.filter((b) => b.level === 'ingredient');
+  const undisclosed = badges.find((b) => b.level === 'undisclosed');
   return (
     <>
       <Section title="제조국 · 브랜드" noDivider>
@@ -141,17 +149,27 @@ function OriginTab({ data }: { data: Product }) {
         {data.origin?.brand_owner_name ? <Text style={styles.muted}>책임판매업자: {data.origin.brand_owner_name}</Text> : null}
       </Section>
       <Section title="원재료 원산지 (상위 순위)">
-        {ing.length === 0 ? <Text style={styles.muted}>라벨 원산지 정보가 아직 없어요. 뒷면을 비춰 등록할 수 있습니다.</Text> : null}
+        {ing.length === 0 ? (
+          <>
+            <Text style={styles.muted}>라벨 원산지 정보가 아직 없어요. 뒷면을 비춰 등록할 수 있습니다.</Text>
+            <Pressable onPress={onRegisterLabel} style={styles.correctBtn}>
+              <Text style={styles.correctText}>뒷면 라벨 촬영해 등록</Text>
+            </Pressable>
+          </>
+        ) : null}
         {ing.map((b) => (
           <View key={`${b.ingredientName}-${b.rank}`} style={styles.ingRow}>
             <Text style={styles.ingName}>
               {b.rank ? `${b.rank}. ` : ''}
               {b.ingredientName}
             </Text>
-            <Text style={styles.ingCountry}>{b.text}</Text>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={styles.ingCountry}>{ingredientOriginShort(b).replace(`${b.ingredientName} `, '')}</Text>
+              {b.basis ?? b.note ? <Text style={styles.muted}>{b.basis ?? b.note}</Text> : null}
+            </View>
           </View>
         ))}
-        {data.origin?.undisclosed_note ? <Text style={styles.muted}>{data.origin.undisclosed_note}</Text> : null}
+        {undisclosed ? <Text style={styles.muted}>{undisclosed.note ?? undisclosed.text}</Text> : null}
         {data.origin?.confidence ? (
           <Text style={styles.muted}>
             확신 수준: {data.origin.confidence === 'label_read' ? '라벨 확인' : data.origin.confidence === 'ocr' ? 'OCR' : '추정'}
@@ -236,6 +254,69 @@ function NutritionTab({ data }: { data: Product }) {
   );
 }
 
+/**
+ * 대체 제품 (docs/02 P1-2): 같은 카테고리에서 "제조국 한국 + 등급 더 좋은" 제품 최대 3개.
+ * 서버가 고르고 이유 한 줄(`reason`)을 함께 줍니다. 카드를 누르면 그 제품 상세로 이동합니다.
+ */
+function AlternativesTab({ productId, onSelect }: { productId: string; onSelect: (id: string) => void }) {
+  const query = useQuery({
+    queryKey: ['product', productId, 'alternatives'],
+    queryFn: ({ signal }) => getAlternatives(productId, 3, { signal }),
+  });
+
+  if (query.isPending) {
+    return (
+      <Section noDivider>
+        <ActivityIndicator />
+      </Section>
+    );
+  }
+  if (query.isError) {
+    return (
+      <Section noDivider>
+        <Text style={styles.muted}>대체 제품을 불러오지 못했어요. {query.error.message}</Text>
+      </Section>
+    );
+  }
+  const items: Alternative[] = query.data.alternatives;
+  return (
+    <Section title="대체 제품" noDivider>
+      {items.length === 0 ? <Text style={styles.muted}>비교할 제품이 아직 없어요</Text> : null}
+      {items.map((alt) => {
+        const g = alt.grade_summary;
+        return (
+          <Pressable key={alt.product.id} onPress={() => onSelect(alt.product.id)} style={styles.altCard}>
+            {alt.product.image_url ? (
+              <Image source={{ uri: alt.product.image_url }} style={styles.altThumb} />
+            ) : (
+              <View style={[styles.altThumb, styles.thumbEmpty]} />
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ingName} numberOfLines={2}>
+                {alt.product.name}
+              </Text>
+              <Text style={styles.muted}>
+                {[alt.product.brand ?? alt.product.manufacturer, alt.manufacturing_country ? `제조국 ${alt.manufacturing_country}` : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Text>
+              <View style={[styles.badgeRow, { marginTop: 6 }]}>
+                <GradeChip grade={0} count={g['0']} />
+                <GradeChip grade={1} count={g['1']} />
+                <GradeChip grade={2} count={g['2']} />
+                <GradeChip grade={3} count={g['3']} />
+              </View>
+              <Text style={styles.altReason}>{alt.reason}</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
+        );
+      })}
+      <Text style={styles.disclaimer}>추천은 제조국·성분 등급만 비교한 것이며 맛·가격·개인 건강 상태를 반영하지 않습니다.</Text>
+    </Section>
+  );
+}
+
 function SourcesTab({ data, onCorrection }: { data: Product; onCorrection: () => void }) {
   return (
     <>
@@ -294,4 +375,15 @@ const styles = StyleSheet.create({
   disclaimer: { fontSize: 12, color: colors.textMuted, textAlign: 'center', paddingVertical: spacing.lg, paddingHorizontal: spacing.lg },
   correctBtn: { marginTop: spacing.md, alignSelf: 'flex-start', backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingVertical: 10, borderRadius: radius.md },
   correctText: { color: colors.primary, fontWeight: '700' },
+  altCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  altThumb: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.surface },
+  altReason: { fontSize: 12, color: colors.text, marginTop: 4 },
+  chevron: { fontSize: 22, color: colors.textMuted },
 });

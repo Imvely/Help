@@ -15,6 +15,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: 'app.eodisan.mobile',
     supportsTablet: false,
+    usesAppleSignIn: true, // Sign in with Apple (App Store 4.8: 소셜 로그인 제공 시 필수)
     infoPlist: {
       NSCameraUsageDescription: CAMERA_PERMISSION_TEXT,
       // 한국어 UI 기본값
@@ -40,6 +41,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     'expo-sqlite',
     'expo-secure-store',
+    // 회수 푸시 알림(P1-4). 아이콘·색상은 에셋이 준비되면 옵션으로 추가합니다.
+    'expo-notifications',
+    // Sign in with Apple entitlement
+    'expo-apple-authentication',
   ],
   experiments: {
     // 라우트 문자열 타입 검사는 `expo start` 가 .expo/types 를 생성해야 동작하므로 우선 끕니다.
@@ -48,6 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     eas: {
       // EAS Build 를 쓸 때 `eas init` 으로 projectId 를 채웁니다.
+      // 푸시 토큰(expo-notifications getExpoPushTokenAsync)도 이 projectId 가 있어야 발급됩니다.
     },
   },
 });

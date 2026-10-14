@@ -17,7 +17,7 @@ import { useProfile, profileHasSettings } from '@/data/profile';
 import { allergenLabel, evaluateProduct, gradeSummary, originBadges } from '@/domain';
 
 import { GradeChip } from './GradeChip';
-import { OriginBadge } from './OriginBadge';
+import { OriginBadge, ingredientOriginShort } from './OriginBadge';
 import { Section } from './Section';
 import { colors, radius, spacing } from './theme';
 
@@ -52,7 +52,11 @@ export function ResultCard({ product, note, onClose }: ResultCardProps) {
   const profile = useProfile((s) => s.profile);
 
   const warnings = useMemo(() => evaluateProduct(product, profile), [product, profile]);
-  const badges = useMemo(() => originBadges(product.origin), [product.origin]);
+  // 면책 문구 배지는 카드에서 따로 그리므로 제외하고, 화장품이면 "원료 원산지 표시 의무 없음" 안내가 나옵니다.
+  const badges = useMemo(
+    () => originBadges(product.origin, { includeDisclaimer: false, category: product.product.category }),
+    [product.origin, product.product.category],
+  );
   const summary = useMemo(
     () => product.grade_summary ?? gradeSummary(product.ingredients),
     [product.grade_summary, product.ingredients],
@@ -61,8 +65,9 @@ export function ResultCard({ product, note, onClose }: ResultCardProps) {
   const { product: info, recall, allergens, sources } = product;
   const showProfile = profileHasSettings(profile);
   const personal = warnings.warnings.filter((w) => w.kind !== 'recall');
-  const mfg = badges.filter((b) => b.level !== 'ingredient');
+  const mfg = badges.filter((b) => b.level === 'manufacturing' || b.level === 'brand_owner');
   const ing = badges.filter((b) => b.level === 'ingredient');
+  const undisclosed = badges.find((b) => b.level === 'undisclosed');
 
   const goDetail = () => router.push(`/product/${info.id}`);
   const goCorrection = () => router.push(`/correction?productId=${encodeURIComponent(info.id)}`);
@@ -130,7 +135,7 @@ export function ResultCard({ product, note, onClose }: ResultCardProps) {
 
         {/* 원산지 */}
         <Section title="원산지">
-          {badges.length === 0 ? (
+          {!product.origin ? (
             <Text style={styles.muted}>원산지 정보 없음 · 뒷면 라벨을 비춰 등록할 수 있어요</Text>
           ) : (
             <>
@@ -143,8 +148,8 @@ export function ResultCard({ product, note, onClose }: ResultCardProps) {
                 <View style={[styles.badgeRow, { marginTop: spacing.sm }]}>
                   <Text style={styles.ingLabel}>원재료</Text>
                   <Text style={styles.ingText}>
-                    {ing.map((b) => `${b.ingredientName} ${b.text}`).join(' · ')}
-                    {product.origin?.undisclosed_note ? ` · ${product.origin.undisclosed_note}` : ''}
+                    {ing.map(ingredientOriginShort).join(' · ')}
+                    {undisclosed ? ` · ${undisclosed.note ?? undisclosed.text}` : ''}
                   </Text>
                 </View>
               ) : null}

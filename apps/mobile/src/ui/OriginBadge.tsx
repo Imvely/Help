@@ -8,6 +8,18 @@ import type { OriginBadge as OriginBadgeModel } from '@/domain';
 
 import { colors, radius, spacing } from './theme';
 
+/**
+ * 원재료 배지를 짧게: "고춧가루 중국산" / "배추 국산" / "설탕 알 수 없음".
+ * 도메인의 `text` 는 "원재료 중 고춧가루: 중국산(라벨 기준)" 처럼 완전한 문장이라 카드 한 줄에는 깁니다.
+ */
+export function ingredientOriginShort(badge: OriginBadgeModel): string {
+  const name = badge.ingredientName ?? badge.label;
+  if (badge.country === 'KR') return `${name} 국산`;
+  if (!badge.country || badge.country === 'unknown') return `${name} 알 수 없음`;
+  if (badge.country === '외국산') return `${name} 외국산`;
+  return `${name} ${badge.flag ? `${badge.flag} ` : ''}${badge.countryName}`;
+}
+
 interface OriginBadgeProps {
   badge: OriginBadgeModel;
 }

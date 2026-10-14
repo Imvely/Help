@@ -71,7 +71,7 @@ export default function ScanScreen() {
         <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
           <Text style={styles.sheetTitle}>찾을 수 없어요</Text>
           <Text style={styles.sheetSub}>바코드 {ean} 은(는) 아직 등록되지 않았어요.</Text>
-          <Link href={`/ocr?ean=${ean}`} asChild>
+          <Link href={`/ocr?ean13=${ean}`} asChild>
             <Pressable style={styles.cta}>
               <Text style={styles.ctaText}>뒷면을 비춰 OCR로 등록하기</Text>
             </Pressable>

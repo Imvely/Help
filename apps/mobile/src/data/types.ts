@@ -1,199 +1,55 @@
 /**
- * API 응답 타입 (docs/06-api-and-ml.md §2 `/products/by-barcode` 예시 기준).
+ * API 응답·요청 타입 (docs/06-api-and-ml.md §2).
  *
- * packages/domain(@eodisan/domain) 의 `src/types.ts` 와 동일한 형태를 유지합니다.
- * 패키지가 빌드·배포되면 이 파일의 타입을 `export type { ... } from '@eodisan/domain'` 로
- * 바꿔 한 곳만 관리하면 됩니다. (TODO: @eodisan/domain 발행 후 교체)
+ * 제품·원산지·성분·프로필처럼 판정 엔진과 **완전히 같은 형태**인 타입은 `@eodisan/domain` 에서 다시 내보냅니다
+ * (두 곳에 복사해 두면 한쪽만 고쳐져 어긋나기 쉽습니다). 이 파일에는 앱/서버 계약에만 있는 타입
+ * (검색·정정·OCR·동기화·푸시·대체 제품·로컬 히스토리)만 둡니다.
  *
  * Python 개발자를 위한 메모: `interface` 는 dataclass/TypedDict 와 비슷한 "모양 선언"이고,
- * 런타임에는 아무 코드도 남지 않습니다. `?:` 는 Optional 필드입니다.
+ * 런타임에는 아무 코드도 남지 않습니다. `?:` 는 Optional 필드, `A | B` 는 Union 입니다.
  */
 
-// ---------------------------------------------------------------------------
-// 국가 코드
-// ---------------------------------------------------------------------------
-
-/** ISO 3166-1 alpha-2 중 앱이 한글명·국기를 보유한 국가. */
-export type IsoCountryCode =
-  | 'KR' | 'CN' | 'US' | 'JP' | 'VN' | 'TH' | 'DE' | 'FR' | 'IT' | 'AU'
-  | 'NZ' | 'BR' | 'CL' | 'IN' | 'ID' | 'MY' | 'PH' | 'RU' | 'GB' | 'CA'
-  | 'ES' | 'NL' | 'TR' | 'EG' | 'PE' | 'AR' | 'MX';
-
-/**
- * 원산지 값.
- * - `외국산`: 라벨에 "외국산"으로만 표기된 국가 변동 원료.
- * - `unknown`: 표시 의무가 없거나(4순위 이하·첨가물·향료) 아직 모르는 경우.
- *   UI는 반드시 "알 수 없음"으로 보여주고 특정 국가로 추정하지 않습니다.
- */
-export type CountryCode = IsoCountryCode | '외국산' | 'unknown';
+import type { GradeSummary, ProductCategory, ProductInfo, Recall } from '@eodisan/domain';
 
 // ---------------------------------------------------------------------------
-// 출처
+// 판정 엔진과 공유하는 타입 (단일 출처 = packages/domain/src/types.ts)
 // ---------------------------------------------------------------------------
 
-export type SourceType =
-  | 'mfds_c002'     // 식약처 품목제조보고
-  | 'mfds_i0490'    // 식약처 회수 정보
-  | 'impfood'       // 수입식품정보마루
-  | 'koreannet'     // 코리안넷
-  | 'ocr_user'      // 사용자 라벨 OCR(미검증)
-  | 'ocr_verified'  // 3명 이상 동일 값
-  | 'manufacturer'  // 제조사 정정 채널
-  | 'curator';      // 내부 검수
+export type {
+  IsoCountryCode,
+  CountryCode,
+  SourceType,
+  Source,
+  ProductCategory,
+  ProductInfo,
+  OriginConfidence,
+  IngredientOrigin,
+  Origin,
+  Grade,
+  EvidenceLevel,
+  AppliesToGroup,
+  Ingredient,
+  GradeSummary,
+  AllergenCode,
+  Allergens,
+  Nutrition,
+  Recall,
+  Product,
+  ProductPayload,
+  CaffeineSensitivity,
+  SkinType,
+  HealthProfile,
+  WarningSeverity,
+  WarningKind,
+  PersonalWarning,
+  PersonalWarnings,
+} from '@eodisan/domain';
 
-export interface Source {
-  type: SourceType;
-  /** ISO 날짜 문자열(YYYY-MM-DD) */
-  date?: string | null;
-  /** ocr_verified 등에서 동일 값을 확인한 사용자 수 */
-  confirmations?: number;
-}
-
-// ---------------------------------------------------------------------------
-// 제품 기본 정보
-// ---------------------------------------------------------------------------
-
-export type ProductCategory = 'food' | 'cosmetic';
-
-export interface ProductInfo {
-  id: string;
-  name: string;
-  brand?: string | null;
-  manufacturer?: string | null;
-  category: ProductCategory;
-  /** 김치류, 토너 … */
-  subcategory?: string | null;
-  image_url?: string | null;
-}
+export { EMPTY_PROFILE } from '@eodisan/domain';
 
 // ---------------------------------------------------------------------------
-// 원산지
+// 검색 · 회수 · 정정 요청
 // ---------------------------------------------------------------------------
-
-export type OriginConfidence = 'label_read' | 'ocr' | 'inferred';
-
-export interface IngredientOrigin {
-  name: string;
-  /** 라벨 표시 순서(1부터). 식품은 상위 3순위만 표시 의무 */
-  rank?: number | null;
-  country: CountryCode;
-  raw_text?: string | null;
-  source?: SourceType | null;
-  confirmations?: number;
-}
-
-export interface Origin {
-  declared_origin_country?: CountryCode | null;
-  /** 실제 공장 국가 */
-  manufacturing_country: CountryCode | null;
-  manufacturer_name?: string | null;
-  manufacturer_country?: CountryCode | null;
-  /** 책임판매업자 / 유통전문판매원 국가 */
-  brand_owner_country: CountryCode | null;
-  brand_owner_name?: string | null;
-  /** 제조업자 ≠ 브랜드 */
-  oem: boolean;
-  ingredients: IngredientOrigin[];
-  /** 예: "4순위 이하 원료는 표시 의무 없음" */
-  undisclosed_note?: string | null;
-  confidence?: OriginConfidence | null;
-  source?: SourceType | null;
-}
-
-// ---------------------------------------------------------------------------
-// 성분
-// ---------------------------------------------------------------------------
-
-/** 0 안전 · 1 주의 · 2 논쟁 · 3 유해. null = KB 미확인 */
-export type Grade = 0 | 1 | 2 | 3;
-
-/** 근거 수준: 🏛 규제결론 / 📚 체계적 문헌 / 🔬 관찰연구 / 🧪 동물·세포 */
-export type EvidenceLevel = 'regulatory' | 'systematic' | 'observational' | 'animal_cell';
-
-export type AppliesToGroup = 'pku' | 'child' | 'kidney' | 'pregnancy' | 'pet' | (string & {});
-
-export interface Ingredient {
-  id?: string | null;
-  name: string;
-  raw_text?: string | null;
-  function?: string | null;
-  rank?: number | null;
-  grade: Grade | null;
-  evidence?: EvidenceLevel | null;
-  regulatory_status?: Record<string, string> | null;
-  applies_to_groups?: AppliesToGroup[] | null;
-  summary_ko?: string | null;
-}
-
-/** API `grade_summary` 와 동일한 키 */
-export interface GradeSummary {
-  '0': number;
-  '1': number;
-  '2': number;
-  '3': number;
-  unknown: number;
-}
-
-// ---------------------------------------------------------------------------
-// 알레르기
-// ---------------------------------------------------------------------------
-
-/** 점(.)으로 계층을 표현: `egg`, `tree_nut.walnut`, `shellfish.crustacean.shrimp` */
-export type AllergenCode = string;
-
-export interface Allergens {
-  contains: AllergenCode[];
-  may_contain: AllergenCode[];
-}
-
-// ---------------------------------------------------------------------------
-// 영양
-// ---------------------------------------------------------------------------
-
-export interface Nutrition {
-  per_serving_g?: number | null;
-  kcal?: number | null;
-  sodium_mg?: number | null;
-  sugar_g?: number | null;
-  sat_fat_g?: number | null;
-  trans_fat_g?: number | null;
-  protein_g?: number | null;
-  caffeine_mg?: number | null;
-  caffeine_mg_per_100ml?: number | null;
-  high_caffeine?: boolean | null;
-  caffeine_estimated?: boolean | null;
-  source?: SourceType | null;
-}
-
-// ---------------------------------------------------------------------------
-// 회수·판매중지
-// ---------------------------------------------------------------------------
-
-export interface Recall {
-  id?: string | null;
-  mfds_id?: string | null;
-  reason: string;
-  grade?: string | null;
-  issued_at?: string | null;
-}
-
-// ---------------------------------------------------------------------------
-// 제품 응답 전체
-// ---------------------------------------------------------------------------
-
-export interface Product {
-  product: ProductInfo;
-  origin: Origin | null;
-  ingredients: Ingredient[];
-  grade_summary?: GradeSummary | null;
-  allergens: Allergens;
-  nutrition: Nutrition | null;
-  recall: Recall | null;
-  sources: Source[];
-  generated_at?: string | null;
-}
-
-export type ProductPayload = Product;
 
 /** `/products/search?q=` 응답 한 줄 (요약) */
 export interface ProductSearchHit {
@@ -224,80 +80,136 @@ export interface CorrectionRequest {
   image_url?: string | null;
 }
 
+/** 서버 schemas.ProductBrief — 목록·대체 제품 카드에 쓰는 요약 */
+export type ProductBrief = ProductInfo;
+
 // ---------------------------------------------------------------------------
-// 건강 프로필 (기기 로컬 SecureStore)
+// 라벨 OCR (M8): POST /ocr/label → GET /ocr/jobs/{id} → POST /contributions/label
 // ---------------------------------------------------------------------------
 
-export type CaffeineSensitivity = 'normal' | 'sensitive' | 'avoid';
-export type SkinType = 'dry' | 'oily' | 'combination' | 'sensitive';
+export type OcrJobStatus = 'queued' | 'running' | 'done' | 'failed';
 
-export interface HealthProfile {
-  /** 알레르겐 코드 목록(상위 코드 선택 시 하위 전부 포함) */
-  allergens: AllergenCode[];
-  /** "심한 알레르기" 토글 → 혼입 가능도 경고로 승격 */
-  severeAllergy: boolean;
-  caffeineSensitivity: CaffeineSensitivity;
-  pregnant: boolean;
-  nursing: boolean;
-  diabetes: boolean;
-  hypertension: boolean;
-  kidney: boolean;
-  childAgeYears?: number;
-  weightKg?: number;
-  skinType?: SkinType;
-  vegan?: boolean;
+/** OCR 가 구조화한 원재료 한 줄. `origin` 은 라벨 표기 그대로("중국산", "국산"…) 또는 null */
+export interface ExtractedIngredient {
+  name: string;
+  origin: string | null;
+  function: string | null;
+  sub_ingredients: string[];
 }
 
-export const EMPTY_PROFILE: Readonly<HealthProfile> = Object.freeze({
-  allergens: [],
-  severeAllergy: false,
-  caffeineSensitivity: 'normal',
-  pregnant: false,
-  nursing: false,
-  diabetes: false,
-  hypertension: false,
-  kidney: false,
-});
-
-// ---------------------------------------------------------------------------
-// 개인화 경고 결과 ("⚠ 내 프로필" 섹션)
-// ---------------------------------------------------------------------------
-
-export type WarningSeverity = 'danger' | 'warning' | 'info';
-
-export type WarningKind =
-  | 'recall'
-  | 'allergen_contains'
-  | 'allergen_may_contain'
-  | 'caffeine'
-  | 'caffeine_high'
-  | 'pregnancy_caffeine_limit'
-  | 'pregnancy_alcohol'
-  | 'pregnancy_cosmetic'
-  | 'diabetes_sugar'
-  | 'diabetes_sweetener'
-  | 'hypertension_sodium'
-  | 'kidney_phosphate'
-  | 'vegan'
-  | 'child_dye'
-  | 'grade_3'
-  | 'grade_2';
-
-export interface PersonalWarning {
-  severity: WarningSeverity;
-  kind: WarningKind;
-  /** 결과 카드에 그대로 표시할 한글 문장 */
-  message: string;
-  ingredients?: string[];
-  allergen?: AllergenCode;
-  profileAllergen?: AllergenCode;
-  note?: string;
+/** 서버 OCR + 구조화 결과. 사용자가 확인·수정한 뒤 그대로 제보 본문에 넣습니다. */
+export interface LabelExtraction {
+  ocr_text: string;
+  ingredients_raw: string | null;
+  ingredients: ExtractedIngredient[];
+  manufacturing_country: string | null;
+  manufacturer: string | null;
+  brand_owner: string | null;
+  caffeine_mg: number | null;
+  high_caffeine: boolean;
+  allergen_statement: string | null;
+  may_contain_statement: string | null;
+  /** 알레르겐 코드(@eodisan/domain 의 KR_MANDATORY_ALLERGENS 와 같은 체계) */
+  allergens_detected: string[];
+  may_contain_detected: string[];
 }
 
-export interface PersonalWarnings {
-  warnings: PersonalWarning[];
-  counts: Record<WarningSeverity, number>;
-  highest: WarningSeverity | null;
+/** POST /ocr/label 202 응답 */
+export interface OcrSubmitResponse {
+  job_id: string;
+  status: OcrJobStatus;
+}
+
+/** GET /ocr/jobs/{job_id} 응답 */
+export interface OcrJobResponse {
+  job_id: string;
+  status: OcrJobStatus;
+  result: LabelExtraction | null;
+  error?: string;
+}
+
+/** POST /contributions/label 요청 본문 */
+export interface LabelContributionRequest {
+  job_id: string;
+  ean13?: string;
+  product_id?: string;
+  /** product_id 가 없을 때(신규 제품) 필수 */
+  product_name?: string;
+  brand?: string;
+  category?: ProductCategory;
+  extraction: LabelExtraction;
+}
+
+/** POST /contributions/label 201 응답 */
+export interface LabelContributionResponse {
+  product_id: string;
+  /** true 면 이번 제보로 제품이 새로 만들어짐 */
+  created: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// 동기화 (M11/M12): /me/profiles, /me/scans
+// ---------------------------------------------------------------------------
+
+/** 서버에 저장된 프로필 한 건. `payload` 는 HealthProfile 의 JSON 문자열(서버가 암호화해 보관) */
+export interface RemoteProfile {
+  id: string;
+  label: string;
+  payload: string;
+  sync_consent: boolean;
+  updated_at?: string | null;
+}
+
+export interface RemoteProfilesResponse {
+  profiles: RemoteProfile[];
+}
+
+/** PUT /me/profiles 요청 본문 */
+export interface ProfileUpsertRequest {
+  id?: string;
+  label: string;
+  payload: string;
+  sync_consent: true;
+}
+
+/** POST /me/scans 요청의 한 줄 */
+export interface ScanUpload {
+  ean13: string | null;
+  product_id: string | null;
+  method: ScanMethod;
+  /** ISO 8601 */
+  created_at: string;
+}
+
+export interface ScanUploadRequest {
+  scans: ScanUpload[];
+}
+
+// ---------------------------------------------------------------------------
+// 푸시 (P1-4): POST /devices
+// ---------------------------------------------------------------------------
+
+export interface DeviceRegisterRequest {
+  expo_push_token: string;
+  platform: 'ios' | 'android';
+  /** false 면 알림 끄기(토큰은 유지) */
+  enabled?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// 대체 제품 (P1-2): GET /products/{id}/alternatives
+// ---------------------------------------------------------------------------
+
+export interface Alternative {
+  product: ProductBrief;
+  grade_summary: GradeSummary;
+  manufacturing_country: string | null;
+  /** 추천 이유 한 줄 ("제조국 한국 · 유해 등급 성분 0개") */
+  reason: string;
+}
+
+export interface AlternativesResponse {
+  alternatives: Alternative[];
 }
 
 // ---------------------------------------------------------------------------
@@ -314,4 +226,6 @@ export interface ScanRecord {
   method: ScanMethod;
   /** epoch ms */
   created_at: number;
+  /** 서버(/me/scans)에 올라갔으면 1 */
+  synced: number;
 }
